@@ -19,6 +19,7 @@ App móvel de gestão financeira pessoal. React Native (Expo) com Firebase (Auth
 | `DATABASE.md` | Schema Firestore: collections, campos, tipos, Security Rules |
 | `NAVIGATION.md` | Mapa de ecrãs, stacks, tabs, modais e parâmetros |
 | `docs/guidelines.md` | Convenções de código, padrões, estrutura de ficheiros |
+| `.claude/skills/react-native-skills/AGENTS.md` | React Native best practices: listas, animações, UI, performance |
 
 ## Regras importantes
 
