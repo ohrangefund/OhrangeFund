@@ -40,3 +40,24 @@ export const ACCOUNT_ICONS = [
 ] as const;
 
 export type AccountIcon = typeof ACCOUNT_ICONS[number];
+
+export interface Category {
+  id: string;
+  user_id: string;
+  name: string;
+  type: 'income' | 'expense';
+  color: string;
+  icon: string;
+  is_default: boolean;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
+export const CATEGORY_COLORS = ACCOUNT_COLORS;
+
+export const CATEGORY_ICONS = [
+  'shopping-cart', 'utensils', 'car', 'home', 'heart-pulse',
+  'graduation-cap', 'zap', 'plane', 'coffee', 'briefcase',
+  'trending-up', 'trending-down', 'gift', 'piggy-bank', 'banknote', 'wallet',
+  'dumbbell', 'shirt', 'music',
+] as const;

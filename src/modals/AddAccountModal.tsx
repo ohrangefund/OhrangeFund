@@ -29,8 +29,8 @@ export function AddAccountModal({ visible, onClose }: Props) {
   const { user } = useAuth();
   const [name, setName] = useState('');
   const [balance, setBalance] = useState('');
-  const [color, setColor] = useState(ACCOUNT_COLORS[0]);
-  const [icon, setIcon] = useState(ACCOUNT_ICONS[0]);
+  const [color, setColor] = useState<typeof ACCOUNT_COLORS[number]>(ACCOUNT_COLORS[0]);
+  const [icon, setIcon] = useState<typeof ACCOUNT_ICONS[number]>(ACCOUNT_ICONS[0]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 

@@ -1,5 +1,10 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import { getAuth, initializeAuth } from 'firebase/auth';
+// getReactNativePersistence types removed from firebase/auth in v12 — still exists at runtime
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { getReactNativePersistence } = require('firebase/auth') as {
+  getReactNativePersistence: (s: typeof AsyncStorage) => import('firebase/auth').Persistence;
+};
 import { getFirestore, initializeFirestore } from 'firebase/firestore';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';

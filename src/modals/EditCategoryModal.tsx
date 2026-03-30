@@ -1,51 +1,58 @@
 import { useEffect, useState } from 'react';
 import {
   Modal, View, Text, TextInput, ScrollView,
-  Pressable, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, Alert,
+  Pressable, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import {
-  Wallet, CreditCard, Landmark, Banknote, PiggyBank,
-  Briefcase, Home, Car, ShoppingBag, Globe, X,
+  ShoppingCart, Utensils, Car, Home, HeartPulse, GraduationCap,
+  Zap, Plane, Coffee, Briefcase, TrendingUp, TrendingDown, Gift, PiggyBank,
+  Banknote, Wallet, Dumbbell, Shirt, Music, X,
 } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
-import { updateAccount, archiveAccount, deleteAccount } from '@/api/accounts';
-import { ACCOUNT_COLORS, ACCOUNT_ICONS, type Account } from '@/types/models';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { updateCategory, deleteCategory } from '@/api/categories';
+import { CATEGORY_COLORS, CATEGORY_ICONS, type Category } from '@/types/models';
 
 const ICONS_MAP: Record<string, React.FC<{ size: number; color: string }>> = {
-  'wallet': Wallet, 'credit-card': CreditCard, 'landmark': Landmark,
-  'banknote': Banknote, 'piggy-bank': PiggyBank, 'briefcase': Briefcase,
-  'home': Home, 'car': Car, 'shopping-bag': ShoppingBag, 'globe': Globe,
+  'shopping-cart': ShoppingCart, 'utensils': Utensils, 'car': Car,
+  'home': Home, 'heart-pulse': HeartPulse, 'graduation-cap': GraduationCap,
+  'zap': Zap, 'plane': Plane, 'coffee': Coffee, 'briefcase': Briefcase,
+  'trending-up': TrendingUp, 'trending-down': TrendingDown, 'gift': Gift, 'piggy-bank': PiggyBank,
+  'banknote': Banknote, 'wallet': Wallet, 'dumbbell': Dumbbell,
+  'shirt': Shirt, 'music': Music,
 };
 
 interface Props {
-  account: Account | null;
+  category: Category | null;
   onClose: () => void;
 }
 
-export function EditAccountModal({ account, onClose }: Props) {
+export function EditCategoryModal({ category, onClose }: Props) {
   const { colors } = useTheme();
   const [name, setName] = useState('');
-  const [color, setColor] = useState<typeof ACCOUNT_COLORS[number]>(ACCOUNT_COLORS[0]);
-  const [icon, setIcon] = useState<typeof ACCOUNT_ICONS[number]>(ACCOUNT_ICONS[0]);
+  const [color, setColor] = useState<typeof CATEGORY_COLORS[number]>(CATEGORY_COLORS[0]);
+  const [icon, setIcon] = useState<typeof CATEGORY_ICONS[number]>(CATEGORY_ICONS[0]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
-    if (account) {
-      setName(account.name);
-      setColor(account.color as typeof ACCOUNT_COLORS[number]);
-      setIcon(account.icon as typeof ACCOUNT_ICONS[number]);
+    if (category) {
+      setName(category.name);
+      setColor(category.color as typeof CATEGORY_COLORS[number]);
+      setIcon(category.icon as typeof CATEGORY_ICONS[number]);
       setError('');
+      setShowConfirm(false);
     }
-  }, [account]);
+  }, [category]);
 
   async function handleSave() {
-    if (!account) return;
+    if (!category) return;
     if (!name.trim()) { setError('Introduz um nome.'); return; }
     setError('');
     setLoading(true);
     try {
-      await updateAccount(account.id, { name: name.trim(), color, icon });
+      await updateCategory(category.id, { name: name.trim(), color, icon });
       onClose();
     } catch {
       setError('Erro ao guardar. Tenta novamente.');
@@ -54,36 +61,26 @@ export function EditAccountModal({ account, onClose }: Props) {
     }
   }
 
-  function handleArchive() {
-    if (!account) return;
-    Alert.alert(
-      account.archived ? 'Desarquivar conta' : 'Arquivar conta',
-      account.archived ? 'A conta voltará a aparecer na lista.' : 'A conta ficará oculta mas os dados são mantidos.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Confirmar', onPress: () => archiveAccount(account.id, !account.archived).then(onClose) },
-      ],
-    );
-  }
-
-  function handleDelete() {
-    if (!account) return;
-    Alert.alert(
-      'Apagar conta',
-      'Esta ação é irreversível. A conta e todos os seus dados serão apagados.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Apagar', style: 'destructive', onPress: () => deleteAccount(account.id).then(onClose) },
-      ],
-    );
+  async function handleConfirmDelete() {
+    if (!category) return;
+    setLoading(true);
+    try {
+      await deleteCategory(category.id);
+      onClose();
+    } catch {
+      setError('Erro ao apagar. Tenta novamente.');
+      setShowConfirm(false);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <Modal visible={!!account} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <Modal visible={!!category} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <View style={[styles.container, { backgroundColor: colors.background }]}>
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.title, { color: colors.text }]}>Editar conta</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Editar categoria</Text>
             <Pressable onPress={onClose} hitSlop={8}>
               <X size={22} color={colors.textSecondary} />
             </Pressable>
@@ -103,7 +100,7 @@ export function EditAccountModal({ account, onClose }: Props) {
 
             <Text style={[styles.label, { color: colors.textSecondary }]}>Cor</Text>
             <View style={styles.colorGrid}>
-              {ACCOUNT_COLORS.map((c) => (
+              {CATEGORY_COLORS.map((c) => (
                 <Pressable
                   key={c}
                   onPress={() => setColor(c)}
@@ -114,7 +111,7 @@ export function EditAccountModal({ account, onClose }: Props) {
 
             <Text style={[styles.label, { color: colors.textSecondary }]}>Ícone</Text>
             <View style={styles.iconGrid}>
-              {ACCOUNT_ICONS.map((ic) => {
+              {CATEGORY_ICONS.map((ic) => {
                 const Icon = ICONS_MAP[ic];
                 const selected = icon === ic;
                 return (
@@ -132,15 +129,14 @@ export function EditAccountModal({ account, onClose }: Props) {
               })}
             </View>
 
-            {/* Ações perigosas */}
             <View style={[styles.dangerSection, { borderTopColor: colors.border }]}>
-              <Pressable onPress={handleArchive} style={styles.dangerBtn}>
-                <Text style={[styles.dangerText, { color: colors.textSecondary }]}>
-                  {account?.archived ? 'Desarquivar conta' : 'Arquivar conta'}
+              <Pressable
+                onPress={() => category?.is_default ? null : setShowConfirm(true)}
+                style={styles.dangerBtn}
+              >
+                <Text style={[styles.dangerText, { color: category?.is_default ? colors.textDisabled : colors.error }]}>
+                  Apagar categoria
                 </Text>
-              </Pressable>
-              <Pressable onPress={handleDelete} style={styles.dangerBtn}>
-                <Text style={[styles.dangerText, { color: colors.error }]}>Apagar conta</Text>
               </Pressable>
             </View>
           </ScrollView>
@@ -159,6 +155,14 @@ export function EditAccountModal({ account, onClose }: Props) {
           </View>
         </View>
       </KeyboardAvoidingView>
+      <ConfirmModal
+        visible={showConfirm}
+        title="Apagar categoria"
+        message="Esta ação é irreversível."
+        confirmLabel="Apagar"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setShowConfirm(false)}
+      />
     </Modal>
   );
 }
@@ -181,8 +185,8 @@ const styles = StyleSheet.create({
     width: 48, height: 48, borderRadius: 12, borderWidth: 1.5,
     alignItems: 'center', justifyContent: 'center',
   },
-  dangerSection: { marginTop: 32, borderTopWidth: 1, paddingTop: 16 },
-  dangerBtn: { paddingVertical: 12 },
+  dangerSection: { marginTop: 32, borderTopWidth: 1 },
+  dangerBtn: { paddingVertical: 16, alignItems: 'center' },
   dangerText: { fontSize: 15 },
   footer: { padding: 20, borderTopWidth: 1 },
   submitBtn: { borderRadius: 14, paddingVertical: 16, alignItems: 'center' },

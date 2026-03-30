@@ -3,6 +3,7 @@ import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator } from 
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '@/api/firebase';
+import { createDefaultCategories } from '@/api/categories';
 import { useTheme } from '@/context/ThemeContext';
 import type { AuthScreenProps } from '@/types/navigation';
 
@@ -39,6 +40,7 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
         theme: 'dark',
         created_at: serverTimestamp(),
       });
+      await createDefaultCategories(user.uid);
     } catch (e: any) {
       setError(getErrorMessage(e.code));
     } finally {
