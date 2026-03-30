@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/api/firebase';
+import { useTheme } from '@/context/ThemeContext';
 import type { AuthScreenProps } from '@/types/navigation';
 
 function getErrorMessage(code: string): string {
@@ -20,16 +21,14 @@ function getErrorMessage(code: string): string {
 }
 
 export function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
+  const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleLogin() {
-    if (!email || !password) {
-      setError('Preenche todos os campos.');
-      return;
-    }
+    if (!email || !password) { setError('Preenche todos os campos.'); return; }
     setError('');
     setLoading(true);
     try {
@@ -42,83 +41,67 @@ export function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Entrar</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.title, { color: colors.text }]}>Entrar</Text>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <Text style={[styles.error, { color: colors.error }]}>{error}</Text> : null}
 
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
         placeholder="Email"
+        placeholderTextColor={colors.textSecondary}
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
         keyboardType="email-address"
       />
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
         placeholder="Password"
+        placeholderTextColor={colors.textSecondary}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
       />
 
-      <TouchableOpacity style={styles.primaryButton} onPress={handleLogin} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryButtonText}>Entrar</Text>}
+      <TouchableOpacity
+        style={[styles.primaryButton, { backgroundColor: colors.primary }]}
+        onPress={handleLogin}
+        disabled={loading}
+      >
+        {loading
+          ? <ActivityIndicator color={colors.primaryForeground} />
+          : <Text style={[styles.primaryButtonText, { color: colors.primaryForeground }]}>Entrar</Text>
+        }
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-        <Text style={styles.link}>Ainda não tens conta? <Text style={styles.linkBold}>Regista-te</Text></Text>
+        <Text style={[styles.link, { color: colors.textSecondary }]}>
+          Ainda não tens conta? <Text style={{ color: colors.primary, fontWeight: '600' }}>Regista-te</Text>
+        </Text>
       </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 24,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 24,
-  },
-  error: {
-    color: '#ef4444',
-    marginBottom: 12,
-    fontSize: 14,
-  },
+  container: { flex: 1, justifyContent: 'center', padding: 24 },
+  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 24 },
+  error: { marginBottom: 12, fontSize: 14 },
   input: {
     borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 16,
     marginBottom: 12,
     fontSize: 16,
   },
   primaryButton: {
-    backgroundColor: '#F97316',
-    borderRadius: 12,
+    borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
     marginBottom: 16,
     marginTop: 8,
   },
-  primaryButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  link: {
-    textAlign: 'center',
-    color: '#666',
-    fontSize: 14,
-  },
-  linkBold: {
-    color: '#F97316',
-    fontWeight: '600',
-  },
+  primaryButtonText: { fontSize: 16, fontWeight: '600' },
+  link: { textAlign: 'center', fontSize: 14 },
 });

@@ -1,16 +1,27 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
 import type { AuthScreenProps } from '@/types/navigation';
 
 export function WelcomeScreen({ navigation }: AuthScreenProps<'Welcome'>) {
+  const { colors } = useTheme();
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>OhrangeFund</Text>
-      <Text style={styles.subtitle}>Gestão financeira pessoal</Text>
-      <TouchableOpacity style={styles.primaryButton} onPress={() => navigation.navigate('Login')}>
-        <Text style={styles.primaryButtonText}>Entrar</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.title, { color: colors.text }]}>OhrangeFund</Text>
+      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Gestão financeira pessoal</Text>
+
+      <TouchableOpacity
+        style={[styles.primaryButton, { backgroundColor: colors.primary }]}
+        onPress={() => navigation.navigate('Login')}
+      >
+        <Text style={[styles.primaryButtonText, { color: colors.primaryForeground }]}>Entrar</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('Register')}>
-        <Text style={styles.secondaryButtonText}>Criar conta</Text>
+
+      <TouchableOpacity
+        style={[styles.secondaryButton, { borderColor: colors.primary }]}
+        onPress={() => navigation.navigate('Register')}
+      >
+        <Text style={[styles.secondaryButtonText, { color: colors.primary }]}>Criar conta</Text>
       </TouchableOpacity>
     </View>
   );
@@ -22,7 +33,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
-    backgroundColor: '#fff',
   },
   title: {
     fontSize: 32,
@@ -31,34 +41,27 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
     marginBottom: 48,
   },
   primaryButton: {
-    backgroundColor: '#F97316',
-    borderRadius: 12,
+    borderRadius: 14,
     paddingVertical: 16,
-    paddingHorizontal: 32,
     width: '100%',
     alignItems: 'center',
     marginBottom: 12,
   },
   primaryButtonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
   secondaryButton: {
     borderWidth: 1,
-    borderColor: '#F97316',
-    borderRadius: 12,
+    borderRadius: 14,
     paddingVertical: 16,
-    paddingHorizontal: 32,
     width: '100%',
     alignItems: 'center',
   },
   secondaryButtonText: {
-    color: '#F97316',
     fontSize: 16,
     fontWeight: '600',
   },

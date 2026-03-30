@@ -1,24 +1,36 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
 import type { MainTabsParamList } from '@/types/navigation';
 
 const Tab = createBottomTabNavigator<MainTabsParamList>();
 
 function Placeholder({ name }: { name: string }) {
+  const { colors } = useTheme();
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>{name}</Text>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+      <Text style={{ color: colors.text }}>{name}</Text>
     </View>
   );
 }
 
 export function MainTabs() {
+  const { colors } = useTheme();
+
   return (
-    <Tab.Navigator>
+    <Tab.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.surface },
+        headerTintColor: colors.text,
+        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
+      }}
+    >
       <Tab.Screen name="Home" children={() => <Placeholder name="Home" />} />
-      <Tab.Screen name="Transactions" children={() => <Placeholder name="Transações" />} />
+      <Tab.Screen name="Transactions" options={{ title: 'Transações' }} children={() => <Placeholder name="Transações" />} />
       <Tab.Screen name="Analytics" children={() => <Placeholder name="Analytics" />} />
-      <Tab.Screen name="Settings" children={() => <Placeholder name="Definições" />} />
+      <Tab.Screen name="Settings" options={{ title: 'Definições' }} children={() => <Placeholder name="Definições" />} />
     </Tab.Navigator>
   );
 }
