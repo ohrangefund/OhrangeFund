@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/api/firebase';
 import { useTheme } from '@/context/ThemeContext';
@@ -64,7 +64,7 @@ export function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
         secureTextEntry
       />
 
-      <TouchableOpacity
+      <Pressable
         style={[styles.primaryButton, { backgroundColor: colors.primary }]}
         onPress={handleLogin}
         disabled={loading}
@@ -73,13 +73,13 @@ export function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
           ? <ActivityIndicator color={colors.primaryForeground} />
           : <Text style={[styles.primaryButtonText, { color: colors.primaryForeground }]}>Entrar</Text>
         }
-      </TouchableOpacity>
+      </Pressable>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+      <Pressable onPress={() => navigation.navigate('Register')}>
         <Text style={[styles.link, { color: colors.textSecondary }]}>
           Ainda não tens conta? <Text style={{ color: colors.primary, fontWeight: '600' }}>Regista-te</Text>
         </Text>
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 }

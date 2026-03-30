@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 import type { AuthScreenProps } from '@/types/navigation';
 
@@ -10,19 +10,19 @@ export function WelcomeScreen({ navigation }: AuthScreenProps<'Welcome'>) {
       <Text style={[styles.title, { color: colors.text }]}>OhrangeFund</Text>
       <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Gestão financeira pessoal</Text>
 
-      <TouchableOpacity
+      <Pressable
         style={[styles.primaryButton, { backgroundColor: colors.primary }]}
         onPress={() => navigation.navigate('Login')}
       >
         <Text style={[styles.primaryButtonText, { color: colors.primaryForeground }]}>Entrar</Text>
-      </TouchableOpacity>
+      </Pressable>
 
-      <TouchableOpacity
+      <Pressable
         style={[styles.secondaryButton, { borderColor: colors.primary }]}
         onPress={() => navigation.navigate('Register')}
       >
         <Text style={[styles.secondaryButtonText, { color: colors.primary }]}>Criar conta</Text>
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 }

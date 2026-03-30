@@ -1,4 +1,5 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useMemo } from 'react';
 import { View, Text } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 import type { MainTabsParamList } from '@/types/navigation';
@@ -17,16 +18,16 @@ function Placeholder({ name }: { name: string }) {
 export function MainTabs() {
   const { colors } = useTheme();
 
+  const screenOptions = useMemo(() => ({
+    headerStyle: { backgroundColor: colors.surface },
+    headerTintColor: colors.text,
+    tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
+    tabBarActiveTintColor: colors.primary,
+    tabBarInactiveTintColor: colors.textSecondary,
+  }), [colors]);
+
   return (
-    <Tab.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: colors.surface },
-        headerTintColor: colors.text,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
-      }}
-    >
+    <Tab.Navigator screenOptions={screenOptions}>
       <Tab.Screen name="Home" children={() => <Placeholder name="Home" />} />
       <Tab.Screen name="Transactions" options={{ title: 'Transações' }} children={() => <Placeholder name="Transações" />} />
       <Tab.Screen name="Analytics" children={() => <Placeholder name="Analytics" />} />

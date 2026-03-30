@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '@/api/firebase';
@@ -70,7 +70,7 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
         secureTextEntry
       />
 
-      <TouchableOpacity
+      <Pressable
         style={[styles.primaryButton, { backgroundColor: colors.primary }]}
         onPress={handleRegister}
         disabled={loading}
@@ -79,13 +79,13 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
           ? <ActivityIndicator color={colors.primaryForeground} />
           : <Text style={[styles.primaryButtonText, { color: colors.primaryForeground }]}>Criar conta</Text>
         }
-      </TouchableOpacity>
+      </Pressable>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+      <Pressable onPress={() => navigation.navigate('Login')}>
         <Text style={[styles.link, { color: colors.textSecondary }]}>
           Já tens conta? <Text style={{ color: colors.primary, fontWeight: '600' }}>Entra</Text>
         </Text>
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 }
