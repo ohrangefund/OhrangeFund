@@ -16,7 +16,7 @@ function getErrorMessage(code: string): string {
     case 'auth/too-many-requests':
       return 'Demasiadas tentativas. Tenta mais tarde.';
     default:
-      return 'Erro ao entrar. Tenta novamente.';
+      return `Erro ao entrar (${code}). Tenta novamente.`;
   }
 }
 

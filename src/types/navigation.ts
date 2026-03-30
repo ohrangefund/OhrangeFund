@@ -14,6 +14,11 @@ export type MainTabsParamList = {
   Settings: undefined;
 };
 
+export type HomeStackParamList = {
+  HomeMain: undefined;
+  AccountDetail: { accountId: string };
+};
+
 export type AuthScreenProps<T extends keyof AuthStackParamList> =
   NativeStackScreenProps<AuthStackParamList, T>;
 

@@ -2,6 +2,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useMemo } from 'react';
 import { View, Text } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
+import { HomeStack } from '@/navigation/stacks/HomeStack';
 import type { MainTabsParamList } from '@/types/navigation';
 
 const Tab = createBottomTabNavigator<MainTabsParamList>();
@@ -28,7 +29,7 @@ export function MainTabs() {
 
   return (
     <Tab.Navigator screenOptions={screenOptions}>
-      <Tab.Screen name="Home" children={() => <Placeholder name="Home" />} />
+      <Tab.Screen name="Home" component={HomeStack} options={{ headerShown: false }} />
       <Tab.Screen name="Transactions" options={{ title: 'Transações' }} children={() => <Placeholder name="Transações" />} />
       <Tab.Screen name="Analytics" children={() => <Placeholder name="Analytics" />} />
       <Tab.Screen name="Settings" options={{ title: 'Definições' }} children={() => <Placeholder name="Definições" />} />
