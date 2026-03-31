@@ -70,6 +70,19 @@ export interface Transaction {
   updated_at: Timestamp;
 }
 
+export interface Transfer {
+  id: string;
+  user_id: string;
+  from_account_id: string;
+  to_account_id: string;
+  account_ids: string[]; // [from, to] — para queries array-contains
+  amount: number;        // cêntimos, sempre positivo
+  description: string;
+  date: Timestamp;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
 export const CATEGORY_ICONS = [
   'shopping-cart', 'utensils', 'car', 'home', 'heart-pulse',
   'graduation-cap', 'zap', 'plane', 'coffee', 'briefcase',

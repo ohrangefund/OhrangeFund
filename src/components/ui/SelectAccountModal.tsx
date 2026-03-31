@@ -18,11 +18,12 @@ interface Props {
   accounts: Account[];
   selectedId: string | null;
   onSelect: (account: Account) => void;
-  onSelectTotal: () => void;
+  onSelectTotal?: () => void;
   onClose: () => void;
+  showTotal?: boolean;
 }
 
-export function SelectAccountModal({ visible, accounts, selectedId, onSelect, onSelectTotal, onClose }: Props) {
+export function SelectAccountModal({ visible, accounts, selectedId, onSelect, onSelectTotal, onClose, showTotal = true }: Props) {
   const { colors } = useTheme();
   const totalSelected = selectedId === null;
 
@@ -38,8 +39,8 @@ export function SelectAccountModal({ visible, accounts, selectedId, onSelect, on
           </View>
 
           {/* Geral option */}
-          <Pressable
-            onPress={() => { onSelectTotal(); onClose(); }}
+          {showTotal && <Pressable
+            onPress={() => { onSelectTotal?.(); onClose(); }}
             style={({ pressed }) => [
               styles.item,
               styles.geralItem,
@@ -55,7 +56,7 @@ export function SelectAccountModal({ visible, accounts, selectedId, onSelect, on
             </View>
             <Text style={[styles.name, { color: colors.text, fontWeight: '600' }]}>Geral</Text>
             <Text style={[styles.balance, { color: colors.textSecondary }]}>Todas as contas</Text>
-          </Pressable>
+          </Pressable>}
 
           <FlatList
             data={accounts}
