@@ -4,7 +4,10 @@ import {
   Pressable, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import {
-  ShoppingCart, X, ChevronRight, CalendarDays,
+  ShoppingCart, Utensils, Car, Home, HeartPulse, GraduationCap,
+  Zap, Plane, Coffee, Briefcase, TrendingUp, TrendingDown, Gift, PiggyBank,
+  Banknote, Wallet, Dumbbell, Shirt, Music,
+  X, ChevronRight, CalendarDays,
 } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { useCategories } from '@/hooks/useCategories';
@@ -19,7 +22,12 @@ import { Timestamp } from 'firebase/firestore';
 import type { Transaction, Account } from '@/types/models';
 
 const ICONS: Record<string, React.FC<{ size: number; color: string }>> = {
-  'shopping-cart': ShoppingCart,
+  'shopping-cart': ShoppingCart, 'utensils': Utensils, 'car': Car,
+  'home': Home, 'heart-pulse': HeartPulse, 'graduation-cap': GraduationCap,
+  'zap': Zap, 'plane': Plane, 'coffee': Coffee, 'briefcase': Briefcase,
+  'trending-up': TrendingUp, 'trending-down': TrendingDown, 'gift': Gift,
+  'piggy-bank': PiggyBank, 'banknote': Banknote, 'wallet': Wallet,
+  'dumbbell': Dumbbell, 'shirt': Shirt, 'music': Music,
 };
 
 interface Props {
@@ -59,7 +67,7 @@ export function EditTransactionModal({ transaction, account, accounts, onClose }
       setSelectedAccount(accounts.find((a) => a.id === transaction.account_id) ?? account);
       setError('');
     }
-  }, [transaction]);
+  }, [transaction, accounts, account]);
 
   async function handleSave() {
     if (!transaction) return;

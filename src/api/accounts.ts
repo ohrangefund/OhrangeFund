@@ -1,5 +1,5 @@
 import {
-  collection, doc, addDoc, updateDoc, deleteDoc,
+  collection, doc, addDoc, updateDoc,
   serverTimestamp, query, where, onSnapshot,
 } from 'firebase/firestore';
 import { db } from '@/api/firebase';
@@ -50,6 +50,3 @@ export async function archiveAccount(accountId: string, archived: boolean): Prom
   });
 }
 
-export async function deleteAccount(accountId: string): Promise<void> {
-  await deleteDoc(doc(db, 'accounts', accountId));
-}

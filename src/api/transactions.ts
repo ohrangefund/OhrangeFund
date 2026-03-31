@@ -1,6 +1,6 @@
 import {
   collection, doc, query, where, orderBy, limit as firestoreLimit,
-  onSnapshot, runTransaction, serverTimestamp, getDocs, Timestamp,
+  onSnapshot, runTransaction, serverTimestamp, Timestamp,
 } from 'firebase/firestore';
 import { db } from '@/api/firebase';
 import type { Transaction } from '@/types/models';
@@ -142,12 +142,3 @@ export async function deleteTransaction(
   });
 }
 
-export async function hasTransactionsForCategory(categoryId: string): Promise<boolean> {
-  const q = query(
-    collection(db, 'transactions'),
-    where('category_id', '==', categoryId),
-    firestoreLimit(1),
-  );
-  const snap = await getDocs(q);
-  return !snap.empty;
-}

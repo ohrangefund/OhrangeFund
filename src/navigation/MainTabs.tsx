@@ -32,10 +32,7 @@ function TabsWithDrawer() {
 
   const screenOptions = useMemo(() => ({
     headerShown: false,
-    tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
-    tabBarActiveTintColor: colors.primary,
-    tabBarInactiveTintColor: colors.textSecondary,
-  }), [colors]);
+  }), []);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>

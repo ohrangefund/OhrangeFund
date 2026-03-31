@@ -7,10 +7,13 @@ RootNavigator
 ├── AuthStack          (utilizador não autenticado)
 └── MainTabs           (utilizador autenticado)
     ├── HomeStack
-    ├── TransactionsStack
-    ├── AnalyticsStack
+    ├── AccountsStack
+    ├── Analytics      (placeholder — Fase 9)
+    ├── CategoriesScreen
     └── SettingsStack
 ```
+
+**Nota de navegação:** A barra de tabs inferior está oculta. A navegação entre tabs é feita através do `DrawerMenu` (menu lateral hamburguer). O `NavBridge` captura o objeto `navigation` do Tab.Navigator e regista-o no `DrawerContext`, permitindo ao drawer navegar entre tabs sem acesso direto ao navigator.
 
 ---
 
@@ -18,142 +21,133 @@ RootNavigator
 
 | Ecrã | Ficheiro | Descrição |
 |---|---|---|
-| `WelcomeScreen` | `screens/auth/WelcomeScreen.tsx` | Ecrã inicial com opções de login e registo |
+| `WelcomeScreen` | `screens/auth/WelcomeScreen.tsx` | Ecrã inicial com botões de login e registo |
 | `LoginScreen` | `screens/auth/LoginScreen.tsx` | Formulário de login (email + password) |
-| `RegisterScreen` | `screens/auth/RegisterScreen.tsx` | Formulário de registo (email + password) |
+| `RegisterScreen` | `screens/auth/RegisterScreen.tsx` | Formulário de registo — cria doc em `users` e categorias default |
 
 ---
 
-## MainTabs
+## Layout Principal (autenticado)
 
-4 tabs fixas na barra inferior.
+Todas as screens autenticadas partilham o `AppHeader` (hamburguer + nome da app) e o `DrawerMenu` sobreposto.
 
-| Tab | Ícone | Stack |
+| Componente | Ficheiro | Descrição |
 |---|---|---|
-| Home | `home` | `HomeStack` |
-| Transações | `arrow-left-right` | `TransactionsStack` |
-| Analytics | `bar-chart-2` | `AnalyticsStack` |
-| Definições | `settings` | `SettingsStack` |
+| `AppHeader` | `components/ui/AppHeader.tsx` | Header fixo em todas as tabs — Menu icon (abre drawer) + "OhrangeFund" (navega para Home) |
+| `DrawerMenu` | `components/ui/DrawerMenu.tsx` | Menu lateral animado com 5 destinos: Início, Contas, Gráficos, Categorias, Configurações |
+| `DrawerContext` | `context/DrawerContext.tsx` | Estado do drawer + `registerNavigate` para bridge com Tab.Navigator |
 
 ---
 
 ## HomeStack
 
-| Ecrã | Ficheiro | Descrição |
-|---|---|---|
-| `HomeScreen` | `screens/home/HomeScreen.tsx` | Dashboard: net worth, lista de contas, transações recentes |
-| `AccountDetailScreen` | `screens/home/AccountDetailScreen.tsx` | Detalhe de uma conta: saldo, histórico de transações, membros |
+| Ecrã | Ficheiro | Parâmetros | Descrição |
+|---|---|---|---|
+| `HomeScreen` | `screens/home/HomeScreen.tsx` | — | Dashboard: selector de conta/Geral, cards de saldo + totais, tabs despesas/receitas |
+| (AccountDetail acessível via AccountsStack) | | | |
 
-**Modais acessíveis a partir do HomeStack:**
-| Modal | Ficheiro | Trigger |
-|---|---|---|
-| `AddAccountModal` | `modals/AddAccountModal.tsx` | Botão "+" em HomeScreen |
-| `EditAccountModal` | `modals/EditAccountModal.tsx` | Opções de conta em HomeScreen / AccountDetailScreen |
-| `AddTransactionModal` | `modals/AddTransactionModal.tsx` | FAB global |
-| `AddTransferModal` | `modals/AddTransferModal.tsx` | FAB global |
-
----
-
-## TransactionsStack
-
-| Ecrã | Ficheiro | Descrição |
-|---|---|---|
-| `TransactionsScreen` | `screens/transactions/TransactionsScreen.tsx` | Lista de todas as transações com filtros (conta, tipo, categoria, data) |
-| `ScheduledScreen` | `screens/transactions/ScheduledScreen.tsx` | Lista de transações e transferências agendadas |
-
-**Modais acessíveis a partir do TransactionsStack:**
-| Modal | Ficheiro | Trigger |
-|---|---|---|
-| `AddTransactionModal` | `modals/AddTransactionModal.tsx` | FAB global |
-| `EditTransactionModal` | `modals/EditTransactionModal.tsx` | Tap numa transação |
-| `AddTransferModal` | `modals/AddTransferModal.tsx` | FAB global |
-| `EditTransferModal` | `modals/EditTransferModal.tsx` | Tap numa transferência |
-| `AddScheduledModal` | `modals/AddScheduledModal.tsx` | Botão "+" em ScheduledScreen |
-| `EditScheduledModal` | `modals/EditScheduledModal.tsx` | Tap num agendamento |
+**Modais acessíveis a partir de HomeScreen:**
+| Modal | Trigger |
+|---|---|
+| `AddTransactionModal` | FAB (só em conta específica) |
+| `EditTransactionModal` | Tap numa transação |
+| `SelectAccountModal` | Selector de conta no topo |
 
 ---
 
-## AnalyticsStack
+## AccountsStack
+
+| Ecrã | Ficheiro | Parâmetros | Descrição |
+|---|---|---|---|
+| `AccountsScreen` | `screens/accounts/AccountsScreen.tsx` | — | Lista de contas activas + arquivadas, saldo total, botões de transferência e histórico |
+| `AccountDetailScreen` | `screens/home/AccountDetailScreen.tsx` | `{ accountId, accountName, accountColor }` | Detalhe de conta: tabs Transações/Transferências, FAB expandível |
+| `TransfersHistoryScreen` | `screens/accounts/TransfersHistoryScreen.tsx` | — | Histórico de todas as transferências do utilizador |
+
+**Modais acessíveis a partir de AccountsStack:**
+| Modal | Trigger |
+|---|---|
+| `AddAccountModal` | FAB em AccountsScreen |
+| `EditAccountModal` | Botão de edição em AccountsScreen |
+| `AddTransferModal` | Botão "Nova transferência" em AccountsScreen |
+| `EditTransferModal` | Tap numa transferência em TransfersHistoryScreen |
+| `AddTransactionModal` | Sub-FAB "Transação" em AccountDetailScreen |
+| `EditTransactionModal` | Tap numa transação em AccountDetailScreen |
+| `AddTransferModal` (com fromAccount) | Sub-FAB "Transferência" em AccountDetailScreen |
+| `EditTransferModal` | Tap numa transferência em AccountDetailScreen |
+
+---
+
+## CategoriesScreen (tab directa)
 
 | Ecrã | Ficheiro | Descrição |
 |---|---|---|
-| `AnalyticsScreen` | `screens/analytics/AnalyticsScreen.tsx` | Gráficos: pizza por categoria, barras income/expense, linha de saldo |
-| `BudgetsScreen` | `screens/analytics/BudgetsScreen.tsx` | Orçamentos mensais por categoria com barras de progresso |
-| `NetWorthScreen` | `screens/analytics/NetWorthScreen.tsx` | Net worth total + gráfico de evolução (12 meses) |
+| `CategoriesScreen` | `screens/settings/CategoriesScreen.tsx` | Tabs Despesa/Receita — lista de categorias |
 
-**Modais acessíveis a partir do AnalyticsStack:**
-| Modal | Ficheiro | Trigger |
-|---|---|---|
-| `AddBudgetModal` | `modals/AddBudgetModal.tsx` | Botão "+" em BudgetsScreen |
-| `EditBudgetModal` | `modals/EditBudgetModal.tsx` | Tap num orçamento |
+**Modais:**
+| Modal | Trigger |
+|---|---|
+| `AddCategoryModal` | FAB |
+| `EditCategoryModal` | Tap numa categoria |
 
 ---
 
 ## SettingsStack
 
-| Ecrã | Ficheiro | Descrição |
-|---|---|---|
-| `SettingsScreen` | `screens/settings/SettingsScreen.tsx` | Menu de definições: perfil, tema, categorias, bancos, partilha, notificações |
-| `CategoriesScreen` | `screens/settings/CategoriesScreen.tsx` | Lista de categorias income e expense, com opção de apagar/editar |
-| `BankConnectionsScreen` | `screens/settings/BankConnectionsScreen.tsx` | Bancos ligados (max 3), avisos de expiração de consentimento |
-| `AccountMembersScreen` | `screens/settings/AccountMembersScreen.tsx` | Membros de uma conta partilhada, permissões, convites |
-
-**Modais acessíveis a partir do SettingsStack:**
-| Modal | Ficheiro | Trigger |
-|---|---|---|
-| `EditProfileModal` | `modals/EditProfileModal.tsx` | Tap no perfil em SettingsScreen |
-| `AddCategoryModal` | `modals/AddCategoryModal.tsx` | Botão "+" em CategoriesScreen |
-| `EditCategoryModal` | `modals/EditCategoryModal.tsx` | Tap numa categoria |
-| `AddBankModal` | `modals/AddBankModal.tsx` | Botão "+" em BankConnectionsScreen |
-| `InviteMemberModal` | `modals/InviteMemberModal.tsx` | Botão "+" em AccountMembersScreen |
+| Ecrã | Ficheiro | Parâmetros | Descrição |
+|---|---|---|---|
+| `SettingsScreen` | `screens/settings/SettingsScreen.tsx` | — | Menu de configurações (actualmente só "Visuais") |
+| `VisualsScreen` | `screens/settings/VisualsScreen.tsx` | — | Escolha de tema: Claro / Escuro |
 
 ---
 
-## FAB Global
+## Analytics (placeholder)
 
-Botão flutuante acessível em qualquer tab.
-
-| Ação | Modal |
-|---|---|
-| Adicionar despesa/rendimento | `AddTransactionModal` |
-| Adicionar transferência | `AddTransferModal` |
+Tab `Analytics` aponta para um `Placeholder` component vazio. Será implementado na Fase 9.
 
 ---
 
-## Parâmetros de Navegação
+## Modais Globais
+
+Modais reutilizados em múltiplos contextos:
+
+| Modal | Ficheiro | Usado em |
+|---|---|---|
+| `SelectAccountModal` | `components/ui/SelectAccountModal.tsx` | HomeScreen, AddTransactionModal, EditTransactionModal, AddTransferModal |
+| `SelectCategoryModal` | `components/ui/SelectCategoryModal.tsx` | AddTransactionModal, EditTransactionModal, EditCategoryModal |
+| `DatePickerModal` | `components/ui/DatePickerModal.tsx` | AddTransactionModal, EditTransactionModal, AddTransferModal, EditTransferModal |
+| `ConfirmModal` | `components/ui/ConfirmModal.tsx` | EditAccountModal, EditCategoryModal, EditTransactionModal, EditTransferModal |
+
+---
+
+## Parâmetros de Navegação (tipos actuais)
 
 ```ts
-// AuthStack
 type AuthStackParamList = {
   Welcome: undefined;
   Login: undefined;
   Register: undefined;
 };
 
-// HomeStack
-type HomeStackParamList = {
+type MainTabsParamList = {
   Home: undefined;
-  AccountDetail: { accountId: string };
-};
-
-// TransactionsStack
-type TransactionsStackParamList = {
-  Transactions: { accountId?: string } | undefined;
-  Scheduled: undefined;
-};
-
-// AnalyticsStack
-type AnalyticsStackParamList = {
+  Accounts: undefined;
   Analytics: undefined;
-  Budgets: undefined;
-  NetWorth: undefined;
+  Categories: undefined;
+  Settings: undefined;
 };
 
-// SettingsStack
+type HomeStackParamList = {
+  HomeMain: undefined;
+};
+
+type AccountsStackParamList = {
+  AccountsMain: undefined;
+  AccountDetail: { accountId: string; accountName: string; accountColor: string };
+  TransfersHistory: undefined;
+};
+
 type SettingsStackParamList = {
-  Settings: undefined;
-  Categories: undefined;
-  BankConnections: undefined;
-  AccountMembers: { accountId: string };
+  SettingsMain: undefined;
+  Visuals: undefined;
 };
 ```

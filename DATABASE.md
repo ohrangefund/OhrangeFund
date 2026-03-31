@@ -84,10 +84,12 @@ Categorias por utilizador, separadas por tipo.
 | `color` | string | Hex |
 | `is_default` | boolean | `true` para `'Outros'` — nunca pode ser apagada |
 | `created_at` | timestamp | |
+| `updated_at` | timestamp | |
 
 **Categorias criadas automaticamente no registo:**
 - `Outros` (income, `is_default: true`)
 - `Outros` (expense, `is_default: true`)
+- Templates iniciais: Salário, Freelance, Investimentos, Alimentação, Transportes, Casa, Saúde, Lazer (`is_default: false`)
 
 ---
 
@@ -122,8 +124,9 @@ Transferências entre contas.
 | `user_id` | string | ref → users |
 | `from_account_id` | string | ref → accounts (conta debitada) |
 | `to_account_id` | string | ref → accounts (conta creditada) |
+| `account_ids` | string[] | `[from_account_id, to_account_id]` — campo auxiliar para queries `array-contains` |
 | `amount` | number | Valor em cêntimos — sempre positivo |
-| `description` | string \| null | Descrição opcional |
+| `description` | string | Descrição (pode ser string vazia) |
 | `date` | timestamp | Data da transferência |
 | `created_at` | timestamp | |
 | `updated_at` | timestamp | |
@@ -199,6 +202,7 @@ A cada operação, `accounts.balance` é atualizado numa Firestore transaction:
 | Inserir transferência `X` (origem) | `balance -= X` |
 | Inserir transferência `X` (destino) | `balance += X` |
 | Apagar transferência `X` | reverter ambos os lados |
+| Editar transação mudando conta `A → B` | revert em A, apply em B (Firestore transaction com 2 reads antes de qualquer write) |
 
 ---
 

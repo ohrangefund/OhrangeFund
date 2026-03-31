@@ -56,9 +56,17 @@ export function EditAccountModal({ account, onClose }: Props) {
     }
   }
 
-  function handleArchiveConfirm() {
+  async function handleArchiveConfirm() {
     if (!account) return;
-    archiveAccount(account.id, !account.archived).then(onClose);
+    setLoading(true);
+    try {
+      await archiveAccount(account.id, !account.archived);
+      onClose();
+    } catch {
+      setError('Erro ao atualizar conta. Tenta novamente.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

@@ -34,14 +34,12 @@ export function DrawerMenu() {
         useNativeDriver: true,
       }),
     ]).start();
-  }, [isOpen]);
-
-  if (!isOpen) return null;
+  }, [isOpen, translateX, overlayOpacity]);
 
   return (
     <>
-      {/* Overlay */}
-      <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]}>
+      {/* Overlay — pointer events only when open */}
+      <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]} pointerEvents={isOpen ? 'auto' : 'none'}>
         <Pressable style={StyleSheet.absoluteFill} onPress={close} />
       </Animated.View>
 
