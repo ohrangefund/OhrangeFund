@@ -55,6 +55,7 @@ export function AccountCard({ account, onPress }: AccountCardProps) {
 
 const styles = StyleSheet.create({
   card: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 14,

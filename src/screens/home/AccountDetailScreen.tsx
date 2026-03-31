@@ -10,10 +10,10 @@ import { AddTransactionModal } from '@/modals/AddTransactionModal';
 import { EditTransactionModal } from '@/modals/EditTransactionModal';
 import { formatCurrency } from '@/utils/currency';
 import type { Transaction } from '@/types/models';
-import type { HomeStackParamList } from '@/types/navigation';
+import type { AccountsStackParamList } from '@/types/navigation';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-type Props = NativeStackScreenProps<HomeStackParamList, 'AccountDetail'>;
+type Props = NativeStackScreenProps<AccountsStackParamList, 'AccountDetail'>;
 
 export function AccountDetailScreen({ route }: Props) {
   const { colors } = useTheme();

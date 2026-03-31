@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 import {
   Modal, View, Text, TextInput, ScrollView,
-  Pressable, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, Alert,
+  Pressable, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import {
   Wallet, CreditCard, Landmark, Banknote, PiggyBank,
   Briefcase, Home, Car, ShoppingBag, Globe, X,
 } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
-import { updateAccount, archiveAccount, deleteAccount } from '@/api/accounts';
+import { updateAccount, archiveAccount } from '@/api/accounts';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { ACCOUNT_COLORS, ACCOUNT_ICONS, type Account } from '@/types/models';
 
 const ICONS_MAP: Record<string, React.FC<{ size: number; color: string }>> = {
@@ -29,6 +30,7 @@ export function EditAccountModal({ account, onClose }: Props) {
   const [icon, setIcon] = useState<typeof ACCOUNT_ICONS[number]>(ACCOUNT_ICONS[0]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
 
   useEffect(() => {
     if (account) {
@@ -54,28 +56,9 @@ export function EditAccountModal({ account, onClose }: Props) {
     }
   }
 
-  function handleArchive() {
+  function handleArchiveConfirm() {
     if (!account) return;
-    Alert.alert(
-      account.archived ? 'Desarquivar conta' : 'Arquivar conta',
-      account.archived ? 'A conta voltará a aparecer na lista.' : 'A conta ficará oculta mas os dados são mantidos.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Confirmar', onPress: () => archiveAccount(account.id, !account.archived).then(onClose) },
-      ],
-    );
-  }
-
-  function handleDelete() {
-    if (!account) return;
-    Alert.alert(
-      'Apagar conta',
-      'Esta ação é irreversível. A conta e todos os seus dados serão apagados.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Apagar', style: 'destructive', onPress: () => deleteAccount(account.id).then(onClose) },
-      ],
-    );
+    archiveAccount(account.id, !account.archived).then(onClose);
   }
 
   return (
@@ -89,7 +72,7 @@ export function EditAccountModal({ account, onClose }: Props) {
             </Pressable>
           </View>
 
-          <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
             {error ? <Text style={[styles.error, { color: colors.error }]}>{error}</Text> : null}
 
             <Text style={[styles.label, { color: colors.textSecondary }]}>Nome</Text>
@@ -132,18 +115,15 @@ export function EditAccountModal({ account, onClose }: Props) {
               })}
             </View>
 
-            {/* Ações perigosas */}
-            <View style={[styles.dangerSection, { borderTopColor: colors.border }]}>
-              <Pressable onPress={handleArchive} style={styles.dangerBtn}>
-                <Text style={[styles.dangerText, { color: colors.textSecondary }]}>
-                  {account?.archived ? 'Desarquivar conta' : 'Arquivar conta'}
-                </Text>
-              </Pressable>
-              <Pressable onPress={handleDelete} style={styles.dangerBtn}>
-                <Text style={[styles.dangerText, { color: colors.error }]}>Apagar conta</Text>
-              </Pressable>
-            </View>
           </ScrollView>
+
+          <View style={[styles.dangerSection, { borderTopColor: colors.border }]}>
+            <Pressable onPress={() => setShowArchiveConfirm(true)} style={styles.dangerBtn}>
+              <Text style={[styles.dangerText, { color: account?.archived ? colors.success : colors.error }]}>
+                {account?.archived ? 'Ativar conta' : 'Arquivar conta'}
+              </Text>
+            </Pressable>
+          </View>
 
           <View style={[styles.footer, { borderTopColor: colors.border }]}>
             <Pressable
@@ -159,6 +139,13 @@ export function EditAccountModal({ account, onClose }: Props) {
           </View>
         </View>
       </KeyboardAvoidingView>
+      <ConfirmModal
+        visible={showArchiveConfirm}
+        title={account?.archived ? 'Ativar conta' : 'Arquivar conta'}
+        message={account?.archived ? 'A conta voltará a aparecer na lista.' : 'A conta ficará oculta mas os dados são mantidos.'}
+        onConfirm={handleArchiveConfirm}
+        onCancel={() => setShowArchiveConfirm(false)}
+      />
     </Modal>
   );
 }
@@ -181,8 +168,8 @@ const styles = StyleSheet.create({
     width: 48, height: 48, borderRadius: 12, borderWidth: 1.5,
     alignItems: 'center', justifyContent: 'center',
   },
-  dangerSection: { marginTop: 32, borderTopWidth: 1, paddingTop: 16 },
-  dangerBtn: { paddingVertical: 12 },
+  dangerSection: { marginTop: 32, borderTopWidth: 1 },
+  dangerBtn: { paddingVertical: 16, alignItems: 'center' },
   dangerText: { fontSize: 15 },
   footer: { padding: 20, borderTopWidth: 1 },
   submitBtn: { borderRadius: 14, paddingVertical: 16, alignItems: 'center' },

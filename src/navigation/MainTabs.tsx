@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { View, Text } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { HomeStack } from '@/navigation/stacks/HomeStack';
+import { AccountsStack } from '@/navigation/stacks/AccountsStack';
 import { SettingsStack } from '@/navigation/stacks/SettingsStack';
 import type { MainTabsParamList } from '@/types/navigation';
 
@@ -31,7 +32,7 @@ export function MainTabs() {
   return (
     <Tab.Navigator screenOptions={screenOptions}>
       <Tab.Screen name="Home" component={HomeStack} options={{ headerShown: false }} />
-      <Tab.Screen name="Transactions" options={{ title: 'Transações' }} children={() => <Placeholder name="Transações" />} />
+      <Tab.Screen name="Accounts" component={AccountsStack} options={{ headerShown: false, title: 'Contas' }} />
       <Tab.Screen name="Analytics" children={() => <Placeholder name="Analytics" />} />
       <Tab.Screen name="Settings" component={SettingsStack} options={{ headerShown: false }} />
     </Tab.Navigator>

@@ -155,17 +155,18 @@ export function EditCategoryModal({ category, onClose }: Props) {
               })}
             </View>
 
-            <View style={[styles.dangerSection, { borderTopColor: colors.border }]}>
-              <Pressable
-                onPress={() => category?.is_default ? null : handleDeletePress()}
-                style={styles.dangerBtn}
-              >
-                <Text style={[styles.dangerText, { color: category?.is_default ? colors.textDisabled : colors.error }]}>
-                  Apagar categoria
-                </Text>
-              </Pressable>
-            </View>
           </ScrollView>
+
+          <View style={[styles.dangerSection, { borderTopColor: colors.border }]}>
+            <Pressable
+              onPress={() => category?.is_default ? null : handleDeletePress()}
+              style={styles.dangerBtn}
+            >
+              <Text style={[styles.dangerText, { color: category?.is_default ? colors.textDisabled : colors.error }]}>
+                Apagar categoria
+              </Text>
+            </Pressable>
+          </View>
 
           <View style={[styles.footer, { borderTopColor: colors.border }]}>
             <Pressable

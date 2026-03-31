@@ -6,15 +6,16 @@ import {
 import {
   ShoppingCart, Utensils, Car, Home, HeartPulse, GraduationCap,
   Zap, Plane, Coffee, Briefcase, TrendingUp, TrendingDown, Gift, PiggyBank,
-  Banknote, Wallet, Dumbbell, Shirt, Music, X, ChevronRight,
+  Banknote, Wallet, Dumbbell, Shirt, Music, X, ChevronRight, CalendarDays,
 } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useCategories } from '@/hooks/useCategories';
 import { createTransaction } from '@/api/transactions';
 import { SelectCategoryModal } from '@/components/ui/SelectCategoryModal';
+import { DatePickerModal } from '@/components/ui/DatePickerModal';
 import { amountToCents } from '@/utils/currency';
-import { parseDate, formatDate } from '@/utils/date';
+import { formatDate } from '@/utils/date';
 import { Timestamp } from 'firebase/firestore';
 import type { Account } from '@/types/models';
 
@@ -38,15 +39,13 @@ export function AddTransactionModal({ visible, account, onClose }: Props) {
   const { user } = useAuth();
   const { incomeCategories, expenseCategories } = useCategories();
 
-  const today = new Date();
-  const todayStr = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
-
   const [type, setType] = useState<'income' | 'expense'>('expense');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
-  const [dateStr, setDateStr] = useState(todayStr);
+  const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
   const [description, setDescription] = useState('');
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -55,7 +54,7 @@ export function AddTransactionModal({ visible, account, onClose }: Props) {
 
   function reset() {
     setType('expense'); setAmount(''); setCategoryId('');
-    setDateStr(todayStr); setDescription(''); setError('');
+    setSelectedDate(new Date()); setDescription(''); setError('');
   }
 
   function handleClose() { reset(); onClose(); }
@@ -64,8 +63,6 @@ export function AddTransactionModal({ visible, account, onClose }: Props) {
     const cents = amountToCents(parseFloat(amount.replace(',', '.')));
     if (isNaN(cents) || cents <= 0) { setError('Valor inválido.'); return; }
     if (!categoryId) { setError('Seleciona uma categoria.'); return; }
-    const date = parseDate(dateStr);
-    if (!date) { setError('Data inválida. Usa o formato DD/MM/AAAA.'); return; }
 
     setError('');
     setLoading(true);
@@ -76,7 +73,7 @@ export function AddTransactionModal({ visible, account, onClose }: Props) {
         type,
         amount: cents,
         description: description.trim(),
-        date,
+        date: selectedDate,
       });
       handleClose();
     } catch {
@@ -156,15 +153,16 @@ export function AddTransactionModal({ visible, account, onClose }: Props) {
 
             {/* Data */}
             <Text style={[styles.label, { color: colors.textSecondary }]}>Data</Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-              placeholder="DD/MM/AAAA"
-              placeholderTextColor={colors.textDisabled}
-              value={dateStr}
-              onChangeText={setDateStr}
-              keyboardType="numeric"
-              maxLength={10}
-            />
+            <Pressable
+              onPress={() => setShowDatePicker(true)}
+              style={({ pressed }) => [styles.selector, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.8 : 1 }]}
+            >
+              <CalendarDays size={16} color={colors.textSecondary} style={{ marginRight: 10 }} />
+              <Text style={[styles.selectorText, { color: colors.text }]}>
+                {formatDate(selectedDate)}
+              </Text>
+              <ChevronRight size={16} color={colors.textSecondary} />
+            </Pressable>
 
             {/* Descrição */}
             <Text style={[styles.label, { color: colors.textSecondary }]}>Descrição (opcional)</Text>
@@ -200,6 +198,12 @@ export function AddTransactionModal({ visible, account, onClose }: Props) {
         selectedId={categoryId}
         onSelect={setCategoryId}
         onClose={() => setShowCategoryPicker(false)}
+      />
+      <DatePickerModal
+        visible={showDatePicker}
+        selected={selectedDate}
+        onSelect={setSelectedDate}
+        onClose={() => setShowDatePicker(false)}
       />
     </Modal>
   );

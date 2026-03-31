@@ -184,12 +184,13 @@ export function EditTransactionModal({ transaction, account, onClose }: Props) {
               maxLength={100}
             />
 
-            <View style={[styles.dangerSection, { borderTopColor: colors.border }]}>
-              <Pressable onPress={() => setShowConfirm(true)} style={styles.dangerBtn}>
-                <Text style={[styles.dangerText, { color: colors.error }]}>Apagar transação</Text>
-              </Pressable>
-            </View>
           </ScrollView>
+
+          <View style={[styles.dangerSection, { borderTopColor: colors.border }]}>
+            <Pressable onPress={() => setShowConfirm(true)} style={styles.dangerBtn}>
+              <Text style={[styles.dangerText, { color: colors.error }]}>Apagar transação</Text>
+            </Pressable>
+          </View>
 
           <View style={[styles.footer, { borderTopColor: colors.border }]}>
             <Pressable

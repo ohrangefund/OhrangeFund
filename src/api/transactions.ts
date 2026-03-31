@@ -7,17 +7,17 @@ import type { Transaction } from '@/types/models';
 
 export function subscribeToTransactions(
   userId: string,
-  accountId: string,
+  accountId: string | null,
   limitCount: number,
   callback: (transactions: Transaction[], hasMore: boolean) => void,
 ): () => void {
-  const q = query(
-    collection(db, 'transactions'),
+  const constraints = [
     where('user_id', '==', userId),
-    where('account_id', '==', accountId),
+    ...(accountId !== null ? [where('account_id', '==', accountId)] : []),
     orderBy('date', 'desc'),
     firestoreLimit(limitCount + 1),
-  );
+  ] as const;
+  const q = query(collection(db, 'transactions'), ...constraints);
   return onSnapshot(q, (snap) => {
     const all = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Transaction));
     callback(all.slice(0, limitCount), all.length > limitCount);

@@ -2,7 +2,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useMemo } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { HomeScreen } from '@/screens/home/HomeScreen';
-import { AccountDetailScreen } from '@/screens/home/AccountDetailScreen';
 import type { HomeStackParamList } from '@/types/navigation';
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -18,8 +17,7 @@ export function HomeStack() {
 
   return (
     <Stack.Navigator screenOptions={screenOptions}>
-      <Stack.Screen name="HomeMain" component={HomeScreen} options={{ title: 'Contas' }} />
-      <Stack.Screen name="AccountDetail" component={AccountDetailScreen} options={{ title: 'Conta' }} />
+      <Stack.Screen name="HomeMain" component={HomeScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }

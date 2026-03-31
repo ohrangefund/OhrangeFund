@@ -9,13 +9,17 @@ export type AuthStackParamList = {
 
 export type MainTabsParamList = {
   Home: undefined;
-  Transactions: undefined;
+  Accounts: undefined;
   Analytics: undefined;
   Settings: undefined;
 };
 
 export type HomeStackParamList = {
   HomeMain: undefined;
+};
+
+export type AccountsStackParamList = {
+  AccountsMain: undefined;
   AccountDetail: { accountId: string };
 };
 

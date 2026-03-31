@@ -5,7 +5,7 @@ import type { Transaction } from '@/types/models';
 
 const PAGE_SIZE = 10;
 
-export function useTransactions(accountId: string) {
+export function useTransactions(accountId: string | null) {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
