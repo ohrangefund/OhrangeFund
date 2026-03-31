@@ -66,8 +66,9 @@ export async function createTransaction(
 
 export async function updateTransaction(
   transactionId: string,
-  accountId: string,
+  oldAccountId: string,
   old: { type: 'income' | 'expense'; amount: number },
+  newAccountId: string,
   data: {
     category_id: string;
     type: 'income' | 'expense';
@@ -76,16 +77,22 @@ export async function updateTransaction(
     date: Date;
   },
 ): Promise<void> {
-  const accountRef = doc(db, 'accounts', accountId);
+  const oldAccountRef = doc(db, 'accounts', oldAccountId);
+  const newAccountRef = doc(db, 'accounts', newAccountId);
   const txRef = doc(db, 'transactions', transactionId);
+  const sameAccount = oldAccountId === newAccountId;
 
   await runTransaction(db, async (txn) => {
-    const accountSnap = await txn.get(accountRef);
-    const currentBalance = accountSnap.data()!.balance as number;
+    // All reads before any writes
+    const oldAccountSnap = await txn.get(oldAccountRef);
+    const newAccountSnap = sameAccount ? oldAccountSnap : await txn.get(newAccountRef);
+
+    const oldBalance = oldAccountSnap.data()!.balance as number;
     const revert = old.type === 'income' ? -old.amount : old.amount;
     const apply = data.type === 'income' ? data.amount : -data.amount;
 
     txn.update(txRef, {
+      account_id: newAccountId,
       category_id: data.category_id,
       type: data.type,
       amount: data.amount,
@@ -94,10 +101,22 @@ export async function updateTransaction(
       updated_at: serverTimestamp(),
     });
 
-    txn.update(accountRef, {
-      balance: currentBalance + revert + apply,
-      updated_at: serverTimestamp(),
-    });
+    if (sameAccount) {
+      txn.update(oldAccountRef, {
+        balance: oldBalance + revert + apply,
+        updated_at: serverTimestamp(),
+      });
+    } else {
+      const newBalance = newAccountSnap.data()!.balance as number;
+      txn.update(oldAccountRef, {
+        balance: oldBalance + revert,
+        updated_at: serverTimestamp(),
+      });
+      txn.update(newAccountRef, {
+        balance: newBalance + apply,
+        updated_at: serverTimestamp(),
+      });
+    }
   });
 }
 

@@ -17,10 +17,10 @@ export interface ColorTokens {
 }
 
 export const darkColors: ColorTokens = {
-  background: '#0F0F0F',
-  surface: '#1C1C1C',
-  surfaceAlt: '#252525',
-  border: '#2E2E2E',
+  background: '#1A1A1A',
+  surface: '#252525',
+  surfaceAlt: '#2E2E2E',
+  border: '#3A3A3A',
   text: '#F5F5F5',
   textSecondary: '#9CA3AF',
   textDisabled: '#4B5563',
@@ -33,10 +33,10 @@ export const darkColors: ColorTokens = {
 };
 
 export const lightColors: ColorTokens = {
-  background: '#F9FAFB',
-  surface: '#FFFFFF',
-  surfaceAlt: '#F3F4F6',
-  border: '#E5E7EB',
+  background: '#E8E8E8',
+  surface: '#F2F2F2',
+  surfaceAlt: '#E0E0E0',
+  border: '#C8C8C8',
   text: '#111827',
   textSecondary: '#6B7280',
   textDisabled: '#9CA3AF',

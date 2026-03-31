@@ -16,7 +16,7 @@ import type { Account } from '@/types/models';
 
 interface Props {
   visible: boolean;
-  fromAccount: Account;
+  fromAccount?: Account | null;
   onClose: () => void;
 }
 
@@ -26,18 +26,22 @@ export function AddTransferModal({ visible, fromAccount, onClose }: Props) {
   const { accounts } = useAccounts();
 
   const [amount, setAmount] = useState('');
+  const [fromAccountSelected, setFromAccountSelected] = useState<Account | null>(fromAccount ?? null);
   const [toAccount, setToAccount] = useState<Account | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
   const [description, setDescription] = useState('');
-  const [showAccountPicker, setShowAccountPicker] = useState(false);
+  const [showFromPicker, setShowFromPicker] = useState(false);
+  const [showToPicker, setShowToPicker] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const destinationAccounts = accounts.filter((a) => a.id !== fromAccount.id);
+  const effectiveFrom = fromAccount ?? fromAccountSelected;
+  const destinationAccounts = accounts.filter((a) => a.id !== effectiveFrom?.id);
+  const sourceAccounts = accounts.filter((a) => a.id !== toAccount?.id);
 
   function reset() {
-    setAmount(''); setToAccount(null);
+    setAmount(''); setToAccount(null); setFromAccountSelected(fromAccount ?? null);
     setSelectedDate(new Date()); setDescription(''); setError('');
   }
 
@@ -46,13 +50,14 @@ export function AddTransferModal({ visible, fromAccount, onClose }: Props) {
   async function handleSubmit() {
     const cents = amountToCents(parseFloat(amount.replace(',', '.')));
     if (isNaN(cents) || cents <= 0) { setError('Valor inválido.'); return; }
+    if (!effectiveFrom) { setError('Seleciona a conta de origem.'); return; }
     if (!toAccount) { setError('Seleciona a conta de destino.'); return; }
 
     setError('');
     setLoading(true);
     try {
       await createTransfer(user!.uid, {
-        from_account_id: fromAccount.id,
+        from_account_id: effectiveFrom.id,
         to_account_id: toAccount.id,
         amount: cents,
         description: description.trim(),
@@ -82,15 +87,32 @@ export function AddTransferModal({ visible, fromAccount, onClose }: Props) {
 
             {/* De */}
             <Text style={[styles.label, { color: colors.textSecondary }]}>De</Text>
-            <View style={[styles.staticField, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <View style={[styles.accountDot, { backgroundColor: fromAccount.color }]} />
-              <Text style={[styles.staticText, { color: colors.text }]}>{fromAccount.name}</Text>
-            </View>
+            {fromAccount ? (
+              <View style={[styles.staticField, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <View style={[styles.accountDot, { backgroundColor: fromAccount.color }]} />
+                <Text style={[styles.staticText, { color: colors.text }]}>{fromAccount.name}</Text>
+              </View>
+            ) : (
+              <Pressable
+                onPress={() => setShowFromPicker(true)}
+                style={({ pressed }) => [styles.selector, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.8 : 1 }]}
+              >
+                {fromAccountSelected ? (
+                  <View style={styles.selectorContent}>
+                    <View style={[styles.accountDot, { backgroundColor: fromAccountSelected.color }]} />
+                    <Text style={[styles.selectorText, { color: colors.text }]}>{fromAccountSelected.name}</Text>
+                  </View>
+                ) : (
+                  <Text style={[styles.selectorText, { color: colors.textDisabled }]}>Selecionar conta</Text>
+                )}
+                <ChevronRight size={16} color={colors.textSecondary} />
+              </Pressable>
+            )}
 
             {/* Para */}
             <Text style={[styles.label, { color: colors.textSecondary }]}>Para</Text>
             <Pressable
-              onPress={() => setShowAccountPicker(true)}
+              onPress={() => setShowToPicker(true)}
               style={({ pressed }) => [styles.selector, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.8 : 1 }]}
             >
               {toAccount ? (
@@ -156,12 +178,20 @@ export function AddTransferModal({ visible, fromAccount, onClose }: Props) {
       </KeyboardAvoidingView>
 
       <SelectAccountModal
-        visible={showAccountPicker}
+        visible={showFromPicker}
+        accounts={sourceAccounts}
+        selectedId={fromAccountSelected?.id ?? null}
+        showTotal={false}
+        onSelect={(acc) => { setFromAccountSelected(acc); setShowFromPicker(false); }}
+        onClose={() => setShowFromPicker(false)}
+      />
+      <SelectAccountModal
+        visible={showToPicker}
         accounts={destinationAccounts}
         selectedId={toAccount?.id ?? null}
         showTotal={false}
-        onSelect={(acc) => { setToAccount(acc); setShowAccountPicker(false); }}
-        onClose={() => setShowAccountPicker(false)}
+        onSelect={(acc) => { setToAccount(acc); setShowToPicker(false); }}
+        onClose={() => setShowToPicker(false)}
       />
       <DatePickerModal
         visible={showDatePicker}

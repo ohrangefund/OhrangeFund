@@ -4,17 +4,19 @@ import {
   Pressable, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import {
-  ShoppingCart, X, ChevronRight,
+  ShoppingCart, X, ChevronRight, CalendarDays,
 } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { useCategories } from '@/hooks/useCategories';
 import { updateTransaction, deleteTransaction } from '@/api/transactions';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { SelectCategoryModal } from '@/components/ui/SelectCategoryModal';
+import { SelectAccountModal } from '@/components/ui/SelectAccountModal';
+import { DatePickerModal } from '@/components/ui/DatePickerModal';
 import { amountToCents, centsToAmount } from '@/utils/currency';
-import { parseDate, formatDate } from '@/utils/date';
+import { formatDate } from '@/utils/date';
 import { Timestamp } from 'firebase/firestore';
-import type { Transaction, Category, Account } from '@/types/models';
+import type { Transaction, Account } from '@/types/models';
 
 const ICONS: Record<string, React.FC<{ size: number; color: string }>> = {
   'shopping-cart': ShoppingCart,
@@ -23,19 +25,23 @@ const ICONS: Record<string, React.FC<{ size: number; color: string }>> = {
 interface Props {
   transaction: Transaction | null;
   account: Account;
+  accounts: Account[];
   onClose: () => void;
 }
 
-export function EditTransactionModal({ transaction, account, onClose }: Props) {
+export function EditTransactionModal({ transaction, account, accounts, onClose }: Props) {
   const { colors } = useTheme();
   const { incomeCategories, expenseCategories } = useCategories();
 
   const [type, setType] = useState<'income' | 'expense'>('expense');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
-  const [dateStr, setDateStr] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
+  const [selectedAccount, setSelectedAccount] = useState<Account>(account);
   const [description, setDescription] = useState('');
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [showAccountPicker, setShowAccountPicker] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -48,8 +54,9 @@ export function EditTransactionModal({ transaction, account, onClose }: Props) {
       setType(transaction.type);
       setAmount(centsToAmount(transaction.amount).toFixed(2).replace('.', ','));
       setCategoryId(transaction.category_id);
-      setDateStr(formatDate(transaction.date));
+      setSelectedDate(transaction.date instanceof Date ? transaction.date : transaction.date.toDate());
       setDescription(transaction.description);
+      setSelectedAccount(accounts.find((a) => a.id === transaction.account_id) ?? account);
       setError('');
     }
   }, [transaction]);
@@ -59,17 +66,16 @@ export function EditTransactionModal({ transaction, account, onClose }: Props) {
     const cents = amountToCents(parseFloat(amount.replace(',', '.')));
     if (isNaN(cents) || cents <= 0) { setError('Valor inválido.'); return; }
     if (!categoryId) { setError('Seleciona uma categoria.'); return; }
-    const date = parseDate(dateStr);
-    if (!date) { setError('Data inválida. Usa o formato DD/MM/AAAA.'); return; }
 
     setError('');
     setLoading(true);
     try {
       await updateTransaction(
         transaction.id,
-        account.id,
+        transaction.account_id,
         { type: transaction.type, amount: transaction.amount },
-        { category_id: categoryId, type, amount: cents, description: description.trim(), date },
+        selectedAccount.id,
+        { category_id: categoryId, type, amount: cents, description: description.trim(), date: selectedDate },
       );
       onClose();
     } catch {
@@ -128,6 +134,21 @@ export function EditTransactionModal({ transaction, account, onClose }: Props) {
               ))}
             </View>
 
+            {/* Conta */}
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Conta</Text>
+            <Pressable
+              onPress={() => setShowAccountPicker(true)}
+              style={[styles.selector, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            >
+              <View style={styles.selectorContent}>
+                <View style={[styles.selectorIcon, { backgroundColor: selectedAccount.color + '22' }]}>
+                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: selectedAccount.color }} />
+                </View>
+                <Text style={[styles.selectorText, { color: colors.text }]}>{selectedAccount.name}</Text>
+              </View>
+              <ChevronRight size={16} color={colors.textSecondary} />
+            </Pressable>
+
             {/* Valor */}
             <Text style={[styles.label, { color: colors.textSecondary }]}>Valor (€)</Text>
             <TextInput
@@ -163,15 +184,16 @@ export function EditTransactionModal({ transaction, account, onClose }: Props) {
 
             {/* Data */}
             <Text style={[styles.label, { color: colors.textSecondary }]}>Data</Text>
-            <TextInput
-              style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-              placeholder="DD/MM/AAAA"
-              placeholderTextColor={colors.textDisabled}
-              value={dateStr}
-              onChangeText={setDateStr}
-              keyboardType="numeric"
-              maxLength={10}
-            />
+            <Pressable
+              onPress={() => setShowDatePicker(true)}
+              style={({ pressed }) => [styles.selector, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.8 : 1 }]}
+            >
+              <CalendarDays size={16} color={colors.textSecondary} style={{ marginRight: 10 }} />
+              <Text style={[styles.selectorText, { color: colors.text }]}>
+                {formatDate(selectedDate)}
+              </Text>
+              <ChevronRight size={16} color={colors.textSecondary} />
+            </Pressable>
 
             {/* Descrição */}
             <Text style={[styles.label, { color: colors.textSecondary }]}>Descrição (opcional)</Text>
@@ -207,6 +229,14 @@ export function EditTransactionModal({ transaction, account, onClose }: Props) {
         </View>
       </KeyboardAvoidingView>
 
+      <SelectAccountModal
+        visible={showAccountPicker}
+        accounts={accounts}
+        selectedId={selectedAccount.id}
+        onSelect={(a) => { setSelectedAccount(a); setShowAccountPicker(false); }}
+        onClose={() => setShowAccountPicker(false)}
+        showTotal={false}
+      />
       <SelectCategoryModal
         visible={showCategoryPicker}
         title="Selecionar categoria"
@@ -214,6 +244,12 @@ export function EditTransactionModal({ transaction, account, onClose }: Props) {
         selectedId={categoryId}
         onSelect={setCategoryId}
         onClose={() => setShowCategoryPicker(false)}
+      />
+      <DatePickerModal
+        visible={showDatePicker}
+        selected={selectedDate}
+        onSelect={setSelectedDate}
+        onClose={() => setShowDatePicker(false)}
       />
 
       <ConfirmModal

@@ -1,40 +1,61 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useMemo } from 'react';
-import { View, Text } from 'react-native';
+import { useEffect, useMemo } from 'react';
+import { View } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
+import { DrawerProvider, useDrawer } from '@/context/DrawerContext';
 import { HomeStack } from '@/navigation/stacks/HomeStack';
 import { AccountsStack } from '@/navigation/stacks/AccountsStack';
 import { SettingsStack } from '@/navigation/stacks/SettingsStack';
+import { AppHeader } from '@/components/ui/AppHeader';
+import { DrawerMenu } from '@/components/ui/DrawerMenu';
+import { CategoriesScreen } from '@/screens/settings/CategoriesScreen';
 import type { MainTabsParamList } from '@/types/navigation';
+import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
 const Tab = createBottomTabNavigator<MainTabsParamList>();
 
-function Placeholder({ name }: { name: string }) {
+function Placeholder() {
   const { colors } = useTheme();
-  return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
-      <Text style={{ color: colors.text }}>{name}</Text>
-    </View>
-  );
+  return <View style={{ flex: 1, backgroundColor: colors.background }} />;
 }
 
-export function MainTabs() {
+function NavBridge({ navigation }: BottomTabBarProps) {
+  const { registerNavigate } = useDrawer();
+  useEffect(() => {
+    registerNavigate((name) => navigation.navigate(name as never));
+  }, [navigation, registerNavigate]);
+  return null;
+}
+
+function TabsWithDrawer() {
   const { colors } = useTheme();
 
   const screenOptions = useMemo(() => ({
-    headerStyle: { backgroundColor: colors.surface },
-    headerTintColor: colors.text,
+    headerShown: false,
     tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
     tabBarActiveTintColor: colors.primary,
     tabBarInactiveTintColor: colors.textSecondary,
   }), [colors]);
 
   return (
-    <Tab.Navigator screenOptions={screenOptions}>
-      <Tab.Screen name="Home" component={HomeStack} options={{ headerShown: false }} />
-      <Tab.Screen name="Accounts" component={AccountsStack} options={{ headerShown: false, title: 'Contas' }} />
-      <Tab.Screen name="Analytics" children={() => <Placeholder name="Analytics" />} />
-      <Tab.Screen name="Settings" component={SettingsStack} options={{ headerShown: false }} />
-    </Tab.Navigator>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <AppHeader />
+      <Tab.Navigator screenOptions={screenOptions} tabBar={(props) => <NavBridge {...props} />}>
+        <Tab.Screen name="Home" component={HomeStack} />
+        <Tab.Screen name="Accounts" component={AccountsStack} />
+        <Tab.Screen name="Analytics" component={Placeholder} />
+        <Tab.Screen name="Categories" component={CategoriesScreen} />
+        <Tab.Screen name="Settings" component={SettingsStack} />
+      </Tab.Navigator>
+      <DrawerMenu />
+    </View>
+  );
+}
+
+export function MainTabs() {
+  return (
+    <DrawerProvider>
+      <TabsWithDrawer />
+    </DrawerProvider>
   );
 }

@@ -24,6 +24,23 @@ export function subscribeToTransfers(
   });
 }
 
+export function subscribeToAllTransfers(
+  userId: string,
+  limitCount: number,
+  callback: (transfers: Transfer[], hasMore: boolean) => void,
+): () => void {
+  const q = query(
+    collection(db, 'transfers'),
+    where('user_id', '==', userId),
+    orderBy('date', 'desc'),
+    firestoreLimit(limitCount + 1),
+  );
+  return onSnapshot(q, (snap) => {
+    const all = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Transfer));
+    callback(all.slice(0, limitCount), all.length > limitCount);
+  });
+}
+
 export async function createTransfer(
   userId: string,
   data: {

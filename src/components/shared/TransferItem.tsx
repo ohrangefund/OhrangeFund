@@ -7,19 +7,24 @@ import type { Transfer, Account } from '@/types/models';
 
 interface Props {
   transfer: Transfer;
-  currentAccountId: string;
+  currentAccountId?: string | null;
   accounts: Account[];
   onPress: () => void;
 }
 
 export function TransferItem({ transfer, currentAccountId, accounts, onPress }: Props) {
   const { colors } = useTheme();
-  const isOutgoing = transfer.from_account_id === currentAccountId;
+  const isHistory = !currentAccountId;
+  const isOutgoing = !isHistory && transfer.from_account_id === currentAccountId;
+  const fromAccount = accounts.find((a) => a.id === transfer.from_account_id);
+  const toAccount = accounts.find((a) => a.id === transfer.to_account_id);
   const otherAccountId = isOutgoing ? transfer.to_account_id : transfer.from_account_id;
   const otherAccount = accounts.find((a) => a.id === otherAccountId);
-  const amountColor = isOutgoing ? colors.expense : colors.income;
-  const amountPrefix = isOutgoing ? '-' : '+';
-  const defaultLabel = isOutgoing
+  const amountColor = isHistory ? colors.text : isOutgoing ? colors.expense : colors.income;
+  const amountPrefix = isHistory ? '' : isOutgoing ? '-' : '+';
+  const defaultLabel = isHistory
+    ? `${fromAccount?.name ?? '—'} → ${toAccount?.name ?? '—'}`
+    : isOutgoing
     ? `→ ${otherAccount?.name ?? '—'}`
     : `← ${otherAccount?.name ?? '—'}`;
 

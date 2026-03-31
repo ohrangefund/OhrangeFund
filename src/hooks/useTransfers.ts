@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { subscribeToTransfers } from '@/api/transfers';
+import { subscribeToTransfers, subscribeToAllTransfers } from '@/api/transfers';
 import { useAuth } from '@/context/AuthContext';
 import type { Transfer } from '@/types/models';
 
@@ -22,6 +22,31 @@ export function useTransfers(accountId: string) {
     });
     return unsub;
   }, [user, accountId, limitCount]);
+
+  const loadMore = useCallback(() => {
+    setLimitCount((prev) => prev + PAGE_SIZE);
+  }, []);
+
+  return { transfers, loading, hasMore, loadMore };
+}
+
+export function useAllTransfers() {
+  const { user } = useAuth();
+  const [transfers, setTransfers] = useState<Transfer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
+  const [limitCount, setLimitCount] = useState(PAGE_SIZE);
+
+  useEffect(() => {
+    if (!user) return;
+    setLoading(true);
+    const unsub = subscribeToAllTransfers(user.uid, limitCount, (data, more) => {
+      setTransfers(data);
+      setHasMore(more);
+      setLoading(false);
+    });
+    return unsub;
+  }, [user, limitCount]);
 
   const loadMore = useCallback(() => {
     setLimitCount((prev) => prev + PAGE_SIZE);

@@ -43,7 +43,6 @@ export function HomeScreen() {
     ? null
     : accounts.find((a) => a.id === selectedAccountId) ?? null;
   const displayBalance = isTotal ? totalBalance : (selectedAccount?.balance ?? 0);
-
   function handleSelectAccount(account: Account) {
     setSelectedAccountId(account.id);
     AsyncStorage.setItem(SELECTED_ACCOUNT_KEY, account.id);
@@ -61,6 +60,11 @@ export function HomeScreen() {
   const filteredTransactions = useMemo(
     () => transactions.filter((t) => t.type === activeTab),
     [transactions, activeTab],
+  );
+
+  const displayAmount = useMemo(
+    () => filteredTransactions.reduce((sum, t) => sum + t.amount, 0),
+    [filteredTransactions],
   );
 
   if (accountsLoading) {
@@ -98,14 +102,24 @@ export function HomeScreen() {
         <ChevronDown size={16} color={colors.textSecondary} />
       </Pressable>
 
-      {/* Balance card */}
-      <View style={[styles.balanceCard, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.balanceLabel, { color: colors.textSecondary }]}>
-          {isTotal ? 'Saldo total' : 'Saldo atual'}
-        </Text>
-        <Text style={[styles.balance, { color: colors.text }]}>
-          {formatCurrency(displayBalance)}
-        </Text>
+      {/* Cards row */}
+      <View style={styles.cardsRow}>
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.cardLabel, { color: colors.textSecondary }]}>
+            {isTotal ? 'Saldo total' : 'Saldo atual'}
+          </Text>
+          <Text style={[styles.cardValue, { color: colors.text }]}>
+            {formatCurrency(displayBalance)}
+          </Text>
+        </View>
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.cardLabel, { color: colors.textSecondary }]}>
+            {activeTab === 'expense' ? 'Total despesas' : 'Total receitas'}
+          </Text>
+          <Text style={[styles.cardValue, { color: activeTab === 'expense' ? colors.expense : colors.income }]}>
+            {formatCurrency(displayAmount)}
+          </Text>
+        </View>
       </View>
 
       {/* Tabs */}
@@ -174,19 +188,24 @@ export function HomeScreen() {
         onClose={() => setShowAccountPicker(false)}
       />
       {selectedAccount && (
-        <>
-          <AddTransactionModal
-            visible={showAdd}
-            account={selectedAccount}
-            onClose={() => setShowAdd(false)}
-          />
+        <AddTransactionModal
+          visible={showAdd}
+          account={selectedAccount}
+          accounts={accounts}
+          onClose={() => setShowAdd(false)}
+        />
+      )}
+      {editTransaction && (() => {
+        const editAccount = accounts.find((a) => a.id === editTransaction.account_id) ?? null;
+        return editAccount ? (
           <EditTransactionModal
             transaction={editTransaction}
-            account={selectedAccount}
+            account={editAccount}
+            accounts={accounts}
             onClose={() => setEditTransaction(null)}
           />
-        </>
-      )}
+        ) : null;
+      })()}
     </View>
   );
 }
@@ -200,12 +219,14 @@ const styles = StyleSheet.create({
   },
   accountDot: { width: 10, height: 10, borderRadius: 5 },
   accountName: { flex: 1, fontSize: 16, fontWeight: '600' },
-  balanceCard: {
-    marginHorizontal: 16, marginBottom: 8,
-    borderRadius: 16, padding: 20, alignItems: 'center',
+  cardsRow: {
+    flexDirection: 'row', marginHorizontal: 16, marginBottom: 16, gap: 10,
   },
-  balanceLabel: { fontSize: 13, fontWeight: '500', marginBottom: 4 },
-  balance: { fontSize: 36, fontWeight: '700' },
+  card: {
+    flex: 1, borderRadius: 16, padding: 16, alignItems: 'center',
+  },
+  cardLabel: { fontSize: 12, fontWeight: '500', marginBottom: 4 },
+  cardValue: { fontSize: 22, fontWeight: '700' },
   tabs: { flexDirection: 'row', borderBottomWidth: 1, marginBottom: 4 },
   tab: {
     flex: 1, paddingVertical: 14, alignItems: 'center',

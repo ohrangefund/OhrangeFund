@@ -158,11 +158,13 @@ export function AccountDetailScreen({ route }: Props) {
       <AddTransactionModal
         visible={showAddTransaction}
         account={account}
+        accounts={accounts}
         onClose={() => setShowAddTransaction(false)}
       />
       <EditTransactionModal
         transaction={editTransaction}
         account={account}
+        accounts={accounts}
         onClose={() => setEditTransaction(null)}
       />
       <AddTransferModal

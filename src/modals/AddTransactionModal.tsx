@@ -13,6 +13,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useCategories } from '@/hooks/useCategories';
 import { createTransaction } from '@/api/transactions';
 import { SelectCategoryModal } from '@/components/ui/SelectCategoryModal';
+import { SelectAccountModal } from '@/components/ui/SelectAccountModal';
 import { DatePickerModal } from '@/components/ui/DatePickerModal';
 import { amountToCents } from '@/utils/currency';
 import { formatDate } from '@/utils/date';
@@ -31,10 +32,11 @@ const ICONS: Record<string, React.FC<{ size: number; color: string }>> = {
 interface Props {
   visible: boolean;
   account: Account;
+  accounts: Account[];
   onClose: () => void;
 }
 
-export function AddTransactionModal({ visible, account, onClose }: Props) {
+export function AddTransactionModal({ visible, account, accounts, onClose }: Props) {
   const { colors } = useTheme();
   const { user } = useAuth();
   const { incomeCategories, expenseCategories } = useCategories();
@@ -44,7 +46,9 @@ export function AddTransactionModal({ visible, account, onClose }: Props) {
   const [categoryId, setCategoryId] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
   const [description, setDescription] = useState('');
+  const [selectedAccount, setSelectedAccount] = useState<Account>(account);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [showAccountPicker, setShowAccountPicker] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -55,6 +59,7 @@ export function AddTransactionModal({ visible, account, onClose }: Props) {
   function reset() {
     setType('expense'); setAmount(''); setCategoryId('');
     setSelectedDate(new Date()); setDescription(''); setError('');
+    setSelectedAccount(account);
   }
 
   function handleClose() { reset(); onClose(); }
@@ -68,7 +73,7 @@ export function AddTransactionModal({ visible, account, onClose }: Props) {
     setLoading(true);
     try {
       await createTransaction(user!.uid, {
-        account_id: account.id,
+        account_id: selectedAccount.id,
         category_id: categoryId,
         type,
         amount: cents,
@@ -117,6 +122,21 @@ export function AddTransactionModal({ visible, account, onClose }: Props) {
                 </Pressable>
               ))}
             </View>
+
+            {/* Conta */}
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Conta</Text>
+            <Pressable
+              onPress={() => setShowAccountPicker(true)}
+              style={[styles.selector, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            >
+              <View style={styles.selectorContent}>
+                <View style={[styles.selectorIcon, { backgroundColor: selectedAccount.color + '22' }]}>
+                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: selectedAccount.color }} />
+                </View>
+                <Text style={[styles.selectorText, { color: colors.text }]}>{selectedAccount.name}</Text>
+              </View>
+              <ChevronRight size={16} color={colors.textSecondary} />
+            </Pressable>
 
             {/* Valor */}
             <Text style={[styles.label, { color: colors.textSecondary }]}>Valor (€)</Text>
@@ -191,6 +211,14 @@ export function AddTransactionModal({ visible, account, onClose }: Props) {
         </View>
       </KeyboardAvoidingView>
 
+      <SelectAccountModal
+        visible={showAccountPicker}
+        accounts={accounts}
+        selectedId={selectedAccount.id}
+        onSelect={(a) => { setSelectedAccount(a); setShowAccountPicker(false); }}
+        onClose={() => setShowAccountPicker(false)}
+        showTotal={false}
+      />
       <SelectCategoryModal
         visible={showCategoryPicker}
         title="Selecionar categoria"

@@ -1,5 +1,5 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { ChevronRight, Tag } from 'lucide-react-native';
+import { ChevronRight, Palette } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { SettingsStackParamList } from '@/types/navigation';
@@ -11,15 +11,16 @@ export function SettingsScreen({ navigation }: Props) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>GERAL</Text>
       <View style={[styles.group, { backgroundColor: colors.surface }]}>
         <Pressable
-          onPress={() => navigation.navigate('Categories')}
-          style={({ pressed }) => [styles.row, { borderBottomColor: colors.border, opacity: pressed ? 0.7 : 1 }]}
+          onPress={() => navigation.navigate('Visuals')}
+          style={({ pressed }) => [styles.row, { opacity: pressed ? 0.7 : 1 }]}
         >
           <View style={[styles.iconWrap, { backgroundColor: colors.primary + '22' }]}>
-            <Tag size={18} color={colors.primary} />
+            <Palette size={18} color={colors.primary} />
           </View>
-          <Text style={[styles.rowText, { color: colors.text }]}>Categorias</Text>
+          <Text style={[styles.rowText, { color: colors.text }]}>Visuais</Text>
           <ChevronRight size={18} color={colors.textSecondary} />
         </Pressable>
       </View>
@@ -29,6 +30,7 @@ export function SettingsScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
+  sectionLabel: { fontSize: 12, fontWeight: '600', marginBottom: 8, marginLeft: 4, letterSpacing: 0.5 },
   group: { borderRadius: 16, overflow: 'hidden' },
   row: {
     flexDirection: 'row', alignItems: 'center',

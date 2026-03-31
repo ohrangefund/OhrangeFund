@@ -11,6 +11,7 @@ export type MainTabsParamList = {
   Home: undefined;
   Accounts: undefined;
   Analytics: undefined;
+  Categories: undefined;
   Settings: undefined;
 };
 
@@ -20,12 +21,13 @@ export type HomeStackParamList = {
 
 export type AccountsStackParamList = {
   AccountsMain: undefined;
-  AccountDetail: { accountId: string };
+  AccountDetail: { accountId: string; accountName: string; accountColor: string };
+  TransfersHistory: undefined;
 };
 
 export type SettingsStackParamList = {
   SettingsMain: undefined;
-  Categories: undefined;
+  Visuals: undefined;
 };
 
 export type AuthScreenProps<T extends keyof AuthStackParamList> =

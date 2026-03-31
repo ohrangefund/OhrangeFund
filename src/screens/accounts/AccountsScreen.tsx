@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
-import { Plus, PenLine } from 'lucide-react-native';
+import { Plus, PenLine, ArrowRightLeft, History } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { useAccounts } from '@/hooks/useAccounts';
 import { AccountCard } from '@/components/shared/AccountCard';
 import { AddAccountModal } from '@/modals/AddAccountModal';
 import { EditAccountModal } from '@/modals/EditAccountModal';
+import { AddTransferModal } from '@/modals/AddTransferModal';
 import { formatCurrency } from '@/utils/currency';
 import type { Account } from '@/types/models';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -17,6 +18,7 @@ export function AccountsScreen({ navigation }: Props) {
   const { colors } = useTheme();
   const { accounts, archived, totalBalance, loading } = useAccounts();
   const [showAdd, setShowAdd] = useState(false);
+  const [showAddTransfer, setShowAddTransfer] = useState(false);
   const [editAccount, setEditAccount] = useState<Account | null>(null);
 
   if (loading) {
@@ -34,6 +36,23 @@ export function AccountsScreen({ navigation }: Props) {
         <Text style={[styles.netWorthAmount, { color: colors.text }]}>{formatCurrency(totalBalance)}</Text>
       </View>
 
+      <View style={styles.actionsRow}>
+        <Pressable
+          onPress={() => setShowAddTransfer(true)}
+          style={({ pressed }) => [styles.actionBtn, { backgroundColor: colors.surface, opacity: pressed ? 0.8 : 1 }]}
+        >
+          <ArrowRightLeft size={18} color={colors.primary} />
+          <Text style={[styles.actionText, { color: colors.text }]}>Nova transferência</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => navigation.navigate('TransfersHistory')}
+          style={({ pressed }) => [styles.actionBtn, { backgroundColor: colors.surface, opacity: pressed ? 0.8 : 1 }]}
+        >
+          <History size={18} color={colors.primary} />
+          <Text style={[styles.actionText, { color: colors.text }]}>Histórico</Text>
+        </Pressable>
+      </View>
+
       <FlatList
         data={accounts}
         keyExtractor={(item) => item.id}
@@ -42,7 +61,7 @@ export function AccountsScreen({ navigation }: Props) {
           <View style={styles.cardRow}>
             <AccountCard
               account={item}
-              onPress={() => navigation.navigate('AccountDetail', { accountId: item.id })}
+              onPress={() => navigation.navigate('AccountDetail', { accountId: item.id, accountName: item.name, accountColor: item.color })}
             />
             <Pressable onPress={() => setEditAccount(item)} style={styles.editBtn} hitSlop={8}>
               <PenLine size={16} color={colors.textSecondary} />
@@ -88,6 +107,7 @@ export function AccountsScreen({ navigation }: Props) {
 
       <AddAccountModal visible={showAdd} onClose={() => setShowAdd(false)} />
       <EditAccountModal account={editAccount} onClose={() => setEditAccount(null)} />
+      <AddTransferModal visible={showAddTransfer} onClose={() => setShowAddTransfer(false)} />
     </View>
   );
 }
@@ -98,6 +118,12 @@ const styles = StyleSheet.create({
   netWorth: { margin: 16, borderRadius: 16, padding: 20, alignItems: 'center' },
   netWorthLabel: { fontSize: 13, fontWeight: '500', marginBottom: 4 },
   netWorthAmount: { fontSize: 32, fontWeight: '700' },
+  actionsRow: { flexDirection: 'row', paddingHorizontal: 16, gap: 10, marginBottom: 16 },
+  actionBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 8, borderRadius: 14, paddingVertical: 14,
+  },
+  actionText: { fontSize: 14, fontWeight: '600' },
   list: { paddingHorizontal: 16, paddingBottom: 0 },
   cardRow: { flexDirection: 'row', alignItems: 'center' },
   editBtn: { paddingLeft: 8, paddingBottom: 10 },
