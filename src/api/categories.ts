@@ -1,6 +1,6 @@
 import {
-  collection, query, where, onSnapshot,
-  addDoc, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch,
+  collection, query, where, limit, onSnapshot,
+  addDoc, doc, updateDoc, deleteDoc, serverTimestamp, writeBatch, getDocs,
 } from 'firebase/firestore';
 import { db } from '@/api/firebase';
 import type { Category } from '@/types/models';
@@ -45,6 +45,32 @@ export async function updateCategory(
 
 export async function deleteCategory(id: string): Promise<void> {
   await deleteDoc(doc(db, 'categories', id));
+}
+
+export async function hasTransactionsForCategory(userId: string, categoryId: string): Promise<boolean> {
+  const q = query(
+    collection(db, 'transactions'),
+    where('user_id', '==', userId),
+    where('category_id', '==', categoryId),
+    limit(1),
+  );
+  const snap = await getDocs(q);
+  return !snap.empty;
+}
+
+export async function deleteCategoryWithRedirect(userId: string, categoryId: string, redirectCategoryId: string): Promise<void> {
+  const q = query(
+    collection(db, 'transactions'),
+    where('user_id', '==', userId),
+    where('category_id', '==', categoryId),
+  );
+  const snap = await getDocs(q);
+  const batch = writeBatch(db);
+  snap.docs.forEach((d) => {
+    batch.update(d.ref, { category_id: redirectCategoryId, updated_at: serverTimestamp() });
+  });
+  batch.delete(doc(db, 'categories', categoryId));
+  await batch.commit();
 }
 
 const CATEGORY_TEMPLATES = [

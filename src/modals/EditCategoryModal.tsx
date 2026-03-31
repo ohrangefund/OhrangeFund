@@ -9,8 +9,11 @@ import {
   Banknote, Wallet, Dumbbell, Shirt, Music, X,
 } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
+import { useCategories } from '@/hooks/useCategories';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
-import { updateCategory, deleteCategory } from '@/api/categories';
+import { SelectCategoryModal } from '@/components/ui/SelectCategoryModal';
+import { updateCategory, deleteCategory, hasTransactionsForCategory, deleteCategoryWithRedirect } from '@/api/categories';
 import { CATEGORY_COLORS, CATEGORY_ICONS, type Category } from '@/types/models';
 
 const ICONS_MAP: Record<string, React.FC<{ size: number; color: string }>> = {
@@ -29,12 +32,19 @@ interface Props {
 
 export function EditCategoryModal({ category, onClose }: Props) {
   const { colors } = useTheme();
+  const { user } = useAuth();
+  const { incomeCategories, expenseCategories } = useCategories();
   const [name, setName] = useState('');
   const [color, setColor] = useState<typeof CATEGORY_COLORS[number]>(CATEGORY_COLORS[0]);
   const [icon, setIcon] = useState<typeof CATEGORY_ICONS[number]>(CATEGORY_ICONS[0]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showRedirect, setShowRedirect] = useState(false);
+  const [redirectCategoryId, setRedirectCategoryId] = useState('');
+
+  const redirectCategories = (category?.type === 'expense' ? expenseCategories : incomeCategories)
+    .filter((c) => c.id !== category?.id);
 
   useEffect(() => {
     if (category) {
@@ -43,6 +53,8 @@ export function EditCategoryModal({ category, onClose }: Props) {
       setIcon(category.icon as typeof CATEGORY_ICONS[number]);
       setError('');
       setShowConfirm(false);
+      setShowRedirect(false);
+      setRedirectCategoryId('');
     }
   }, [category]);
 
@@ -61,11 +73,25 @@ export function EditCategoryModal({ category, onClose }: Props) {
     }
   }
 
+  async function handleDeletePress() {
+    if (!category || !user) return;
+    const hasTxns = await hasTransactionsForCategory(user.uid, category.id);
+    if (hasTxns) {
+      setShowRedirect(true);
+    } else {
+      setShowConfirm(true);
+    }
+  }
+
   async function handleConfirmDelete() {
     if (!category) return;
     setLoading(true);
     try {
-      await deleteCategory(category.id);
+      if (redirectCategoryId) {
+        await deleteCategoryWithRedirect(user!.uid, category.id, redirectCategoryId);
+      } else {
+        await deleteCategory(category.id);
+      }
       onClose();
     } catch {
       setError('Erro ao apagar. Tenta novamente.');
@@ -131,7 +157,7 @@ export function EditCategoryModal({ category, onClose }: Props) {
 
             <View style={[styles.dangerSection, { borderTopColor: colors.border }]}>
               <Pressable
-                onPress={() => category?.is_default ? null : setShowConfirm(true)}
+                onPress={() => category?.is_default ? null : handleDeletePress()}
                 style={styles.dangerBtn}
               >
                 <Text style={[styles.dangerText, { color: category?.is_default ? colors.textDisabled : colors.error }]}>
@@ -155,10 +181,20 @@ export function EditCategoryModal({ category, onClose }: Props) {
           </View>
         </View>
       </KeyboardAvoidingView>
+      <SelectCategoryModal
+        visible={showRedirect}
+        title="Redirecionar transações"
+        categories={redirectCategories}
+        selectedId={redirectCategoryId}
+        onSelect={(id) => { setRedirectCategoryId(id); setShowRedirect(false); setShowConfirm(true); }}
+        onClose={() => setShowRedirect(false)}
+      />
       <ConfirmModal
         visible={showConfirm}
         title="Apagar categoria"
-        message="Esta ação é irreversível."
+        message={redirectCategoryId
+          ? 'As transações serão movidas para a categoria selecionada. Esta ação é irreversível.'
+          : 'Esta ação é irreversível.'}
         confirmLabel="Apagar"
         onConfirm={handleConfirmDelete}
         onCancel={() => setShowConfirm(false)}

@@ -55,6 +55,21 @@ export interface Category {
 
 export const CATEGORY_COLORS = ACCOUNT_COLORS;
 
+export interface Transaction {
+  id: string;
+  user_id: string;
+  account_id: string;
+  category_id: string;
+  type: 'income' | 'expense';
+  amount: number;       // cêntimos, sempre positivo
+  description: string;
+  date: Timestamp;
+  source: 'manual' | 'bank';
+  external_id: string | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
 export const CATEGORY_ICONS = [
   'shopping-cart', 'utensils', 'car', 'home', 'heart-pulse',
   'graduation-cap', 'zap', 'plane', 'coffee', 'briefcase',
