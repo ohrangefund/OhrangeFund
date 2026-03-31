@@ -8,6 +8,7 @@ RootNavigator
 └── MainTabs           (utilizador autenticado)
     ├── HomeStack
     ├── AccountsStack
+    ├── ScheduledStack
     ├── Analytics      (placeholder — Fase 9)
     ├── CategoriesScreen
     └── SettingsStack
@@ -100,6 +101,22 @@ Todas as screens autenticadas partilham o `AppHeader` (hamburguer + nome da app)
 
 ---
 
+## ScheduledStack
+
+| Ecrã | Ficheiro | Descrição |
+|---|---|---|
+| `ScheduledScreen` | `screens/scheduled/ScheduledScreen.tsx` | Tabs Transações/Transferências — lista de agendamentos, FAB contextual |
+
+**Modais:**
+| Modal | Trigger |
+|---|---|
+| `AddScheduledTransactionModal` | FAB na tab Transações |
+| `EditScheduledTransactionModal` | Tap num agendamento de transação |
+| `AddScheduledTransferModal` | FAB na tab Transferências |
+| `EditScheduledTransferModal` | Tap num agendamento de transferência |
+
+---
+
 ## Analytics (placeholder)
 
 Tab `Analytics` aponta para um `Placeholder` component vazio. Será implementado na Fase 9.
@@ -131,6 +148,7 @@ type AuthStackParamList = {
 type MainTabsParamList = {
   Home: undefined;
   Accounts: undefined;
+  Scheduled: undefined;
   Analytics: undefined;
   Categories: undefined;
   Settings: undefined;
@@ -144,6 +162,10 @@ type AccountsStackParamList = {
   AccountsMain: undefined;
   AccountDetail: { accountId: string; accountName: string; accountColor: string };
   TransfersHistory: undefined;
+};
+
+type ScheduledStackParamList = {
+  ScheduledMain: undefined;
 };
 
 type SettingsStackParamList = {

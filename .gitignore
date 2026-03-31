@@ -34,9 +34,16 @@ yarn-error.*
 .env*.local
 .env
 
+# Firebase service account (nunca commitar)
+*service-account*.json
+*firebase-adminsdk*.json
+
 # typescript
 *.tsbuildinfo
 
 # generated native folders
 /ios
 /android
+
+.vercel
+.env*.local

@@ -10,6 +10,7 @@ export type AuthStackParamList = {
 export type MainTabsParamList = {
   Home: undefined;
   Accounts: undefined;
+  Scheduled: undefined;
   Analytics: undefined;
   Categories: undefined;
   Settings: undefined;
@@ -23,6 +24,10 @@ export type AccountsStackParamList = {
   AccountsMain: undefined;
   AccountDetail: { accountId: string; accountName: string; accountColor: string };
   TransfersHistory: undefined;
+};
+
+export type ScheduledStackParamList = {
+  ScheduledMain: undefined;
 };
 
 export type SettingsStackParamList = {

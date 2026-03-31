@@ -26,9 +26,10 @@ interface Props {
   selected: Date | null;
   onSelect: (date: Date) => void;
   onClose: () => void;
+  allowFuture?: boolean;
 }
 
-export function DatePickerModal({ visible, selected, onSelect, onClose }: Props) {
+export function DatePickerModal({ visible, selected, onSelect, onClose, allowFuture = false }: Props) {
   const { colors } = useTheme();
   const today = new Date();
 
@@ -42,6 +43,7 @@ export function DatePickerModal({ visible, selected, onSelect, onClose }: Props)
   }
 
   const isCurrentMonth =
+    !allowFuture &&
     cursor.getFullYear() === today.getFullYear() && cursor.getMonth() === today.getMonth();
 
   function nextMonth() {
@@ -51,7 +53,7 @@ export function DatePickerModal({ visible, selected, onSelect, onClose }: Props)
 
   function handleSelect(day: number) {
     const date = new Date(cursor.getFullYear(), cursor.getMonth(), day);
-    if (date > today) return;
+    if (!allowFuture && date > today) return;
     onSelect(date);
     onClose();
   }
@@ -108,7 +110,7 @@ export function DatePickerModal({ visible, selected, onSelect, onClose }: Props)
               const cellDate = new Date(cursor.getFullYear(), cursor.getMonth(), day);
               const isSelected = selected ? isSameDay(cellDate, selected) : false;
               const isToday = isSameDay(cellDate, today);
-              const isFuture = cellDate > today;
+              const isFuture = !allowFuture && cellDate > today;
 
               return (
                 <Pressable

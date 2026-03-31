@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { View, Text, Pressable, StyleSheet, Animated } from 'react-native';
-import { Home, Wallet, BarChart2, Tag, Settings } from 'lucide-react-native';
+import { Home, Wallet, CalendarClock, BarChart2, Tag, Settings } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { useDrawer } from '@/context/DrawerContext';
 
@@ -9,6 +9,7 @@ const DRAWER_WIDTH = 280;
 const MENU_ITEMS = [
   { key: 'Home',       label: 'Início',         Icon: Home },
   { key: 'Accounts',  label: 'Contas',          Icon: Wallet },
+  { key: 'Scheduled', label: 'Agendamentos',    Icon: CalendarClock },
   { key: 'Analytics', label: 'Gráficos',        Icon: BarChart2 },
   { key: 'Categories',label: 'Categorias',      Icon: Tag },
   { key: 'Settings',  label: 'Configurações',   Icon: Settings },

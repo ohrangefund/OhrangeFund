@@ -218,42 +218,51 @@ service cloud.firestore {
     }
 
     match /accounts/{accountId} {
-      allow read, write: if request.auth.uid == resource.data.user_id;
+      allow read, update, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
     }
 
     match /categories/{categoryId} {
-      allow read, write: if request.auth.uid == resource.data.user_id;
+      allow read, update, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
     }
 
     match /transactions/{transactionId} {
-      allow read, write: if request.auth.uid == resource.data.user_id;
+      allow read, update, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
     }
 
     match /transfers/{transferId} {
-      allow read, write: if request.auth.uid == resource.data.user_id;
+      allow read, update, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
     }
 
     match /scheduled_transactions/{id} {
-      allow read, write: if request.auth.uid == resource.data.user_id;
+      allow read, update, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
     }
 
     match /scheduled_transfers/{id} {
-      allow read, write: if request.auth.uid == resource.data.user_id;
+      allow read, update, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
     }
 
     match /bank_connections/{id} {
-      allow read, write: if request.auth.uid == resource.data.user_id;
+      allow read, update, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
     }
 
     match /bank_accounts/{id} {
-      allow read, write: if request.auth.uid == resource.data.user_id;
+      allow read, update, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
     }
 
     // account_members: owner pode gerir, membro pode ler
     match /account_members/{id} {
       allow read: if request.auth.uid == resource.data.user_id
                   || request.auth.uid == resource.data.owner_id;
-      allow write: if request.auth.uid == resource.data.owner_id;
+      allow create: if request.auth.uid == request.resource.data.owner_id;
+      allow update, delete: if request.auth.uid == resource.data.owner_id;
     }
 
   }

@@ -8,8 +8,8 @@ App móvel de gestão financeira pessoal. React Native (Expo) com Firebase (Auth
 
 - **Mobile:** React Native (Expo SDK 54), TypeScript
 - **Auth + DB:** Firebase Authentication + Firestore (acesso direto do cliente via SDK)
-- **APIs externas:** Vercel Functions (apenas GoCardless e push notifications — Fase 7+)
-- **Cron:** Railway (sincronização bancária mensal — Fase 7+)
+- **APIs externas:** Vercel Functions (cron de agendamentos ativo; GoCardless e push notifications — Fase 7+)
+- **Cron:** Vercel Cron (diário às 3h UTC) — processa agendamentos vencidos. Railway removido do plano.
 
 ## Ficheiros de referência
 
@@ -29,7 +29,8 @@ App móvel de gestão financeira pessoal. React Native (Expo) com Firebase (Auth
 | 3 | ✅ | Categorias (CRUD, defaults, redirect ao apagar) |
 | 4 | ✅ | Transações manuais (CRUD, saldo atómico) |
 | 5 | ✅ | Transferências (CRUD, saldo atómico em 2 contas) |
-| 6–13 | ⏳ | Agendamentos, Banco, Partilha, Analytics, etc. |
+| 6 | ✅ | Agendamentos (UI + Vercel Cron diário às 3h UTC) |
+| 7–13 | ⏳ | Banco, Partilha, Analytics, etc. |
 
 ## Arquitectura de navegação
 
@@ -37,7 +38,7 @@ A barra de tabs inferior está **oculta**. Toda a navegação entre tabs é feit
 
 **Mecanismo:** `NavBridge` é renderizado como `tabBar` prop do `Tab.Navigator`, captura o objeto `navigation` e regista-o em `DrawerContext.registerNavigate`. O drawer usa esse callback para navegar entre tabs.
 
-**Tabs actuais:** Home, Accounts, Analytics (placeholder), Categories, Settings
+**Tabs actuais:** Home, Accounts, Scheduled, Analytics (placeholder), Categories, Settings
 
 ## Regras importantes
 
@@ -50,25 +51,32 @@ A barra de tabs inferior está **oculta**. Toda a navegação entre tabs é feit
 - Ícones de categoria/conta: mapa de strings Lucide duplicado em vários ficheiros — é intencional (evita abstrações prematuras)
 - Datas nas forms: sempre via `DatePickerModal` (nunca TextInput manual)
 - `ConfirmModal` em vez de `Alert.alert` (Alert não é fiável na web)
+- **Nunca fazer commits sem o utilizador pedir explicitamente**
 
 ## Estrutura de pastas
 
 ```
 src/
-  api/          Wrappers Firebase SDK (accounts, categories, transactions, transfers, firebase)
+  api/          Wrappers Firebase SDK (accounts, categories, transactions, transfers,
+                scheduledTransactions, scheduledTransfers, firebase)
   components/
     ui/         Primitivos sem lógica de negócio (Button, Card, AppHeader, DrawerMenu,
-                DatePickerModal, SelectAccountModal, SelectCategoryModal, ConfirmModal)
+                DatePickerModal [prop allowFuture], SelectAccountModal, SelectCategoryModal, ConfirmModal)
     shared/     Componentes de domínio sem fetch (TransactionItem, AccountCard,
-                CategoryItem, TransferItem)
+                CategoryItem, TransferItem, ScheduledTransactionItem, ScheduledTransferItem)
   context/      AuthContext, ThemeContext, DrawerContext
-  hooks/        useAccounts, useCategories, useTransactions, useTransfers
+  hooks/        useAccounts, useCategories, useTransactions, useTransfers,
+                useScheduledTransactions, useScheduledTransfers
   navigation/   RootNavigator, AuthStack, MainTabs, stacks/
-  screens/      auth/ home/ accounts/ settings/
-  modals/       Add/Edit modais para Account, Category, Transaction, Transfer
+  screens/      auth/ home/ accounts/ settings/ scheduled/
+  modals/       Add/Edit modais para Account, Category, Transaction, Transfer,
+                ScheduledTransaction, ScheduledTransfer
   constants/    theme.ts — tokens do design system
   types/        models.ts, navigation.ts
   utils/        currency.ts, date.ts
+api/
+  cron/
+    process-scheduled.ts   — Vercel Function: processa agendamentos vencidos diariamente
 ```
 
 ## Convenções

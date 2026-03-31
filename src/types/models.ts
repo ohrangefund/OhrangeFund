@@ -89,3 +89,32 @@ export const CATEGORY_ICONS = [
   'trending-up', 'trending-down', 'gift', 'piggy-bank', 'banknote', 'wallet',
   'dumbbell', 'shirt', 'music',
 ] as const;
+
+export type Recurrence = 'once' | 'weekly' | 'monthly' | 'yearly';
+
+export interface ScheduledTransaction {
+  id: string;
+  user_id: string;
+  account_id: string;
+  category_id: string;
+  amount: number;       // cêntimos, sempre positivo
+  type: 'income' | 'expense';
+  description: string | null;
+  recurrence: Recurrence;
+  next_date: Timestamp;
+  end_date: Timestamp | null;
+  created_at: Timestamp;
+}
+
+export interface ScheduledTransfer {
+  id: string;
+  user_id: string;
+  from_account_id: string;
+  to_account_id: string;
+  amount: number;       // cêntimos, sempre positivo
+  description: string | null;
+  recurrence: Recurrence;
+  next_date: Timestamp;
+  end_date: Timestamp | null;
+  created_at: Timestamp;
+}
