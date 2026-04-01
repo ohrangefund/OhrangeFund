@@ -9,6 +9,7 @@ import {
   Banknote, Wallet, Dumbbell, Shirt, Music,
   X, ChevronRight, CalendarDays,
 } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useCategories } from '@/hooks/useCategories';
 import { updateTransaction, deleteTransaction } from '@/api/transactions';
@@ -39,6 +40,7 @@ interface Props {
 
 export function EditTransactionModal({ transaction, account, accounts, onClose }: Props) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { incomeCategories, expenseCategories } = useCategories();
 
   const [type, setType] = useState<'income' | 'expense'>('expense');
@@ -72,8 +74,8 @@ export function EditTransactionModal({ transaction, account, accounts, onClose }
   async function handleSave() {
     if (!transaction) return;
     const cents = amountToCents(parseFloat(amount.replace(',', '.')));
-    if (isNaN(cents) || cents <= 0) { setError('Valor inválido.'); return; }
-    if (!categoryId) { setError('Seleciona uma categoria.'); return; }
+    if (isNaN(cents) || cents <= 0) { setError(t('common.invalidAmount')); return; }
+    if (!categoryId) { setError(t('modalTransaction.selectCategory')); return; }
 
     setError('');
     setLoading(true);
@@ -87,7 +89,7 @@ export function EditTransactionModal({ transaction, account, accounts, onClose }
       );
       onClose();
     } catch {
-      setError('Erro ao guardar. Tenta novamente.');
+      setError(t('common.errorSave'));
     } finally {
       setLoading(false);
     }
@@ -100,7 +102,7 @@ export function EditTransactionModal({ transaction, account, accounts, onClose }
       await deleteTransaction(transaction.id, account.id, transaction.type, transaction.amount);
       onClose();
     } catch {
-      setError('Erro ao apagar. Tenta novamente.');
+      setError(t('common.errorDelete'));
       setShowConfirm(false);
     } finally {
       setLoading(false);
@@ -112,7 +114,7 @@ export function EditTransactionModal({ transaction, account, accounts, onClose }
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <View style={[styles.container, { backgroundColor: colors.background }]}>
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.title, { color: colors.text }]}>Editar transação</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{t('modalTransaction.editTitle')}</Text>
             <Pressable onPress={onClose} hitSlop={8}>
               <X size={22} color={colors.textSecondary} />
             </Pressable>
@@ -123,27 +125,27 @@ export function EditTransactionModal({ transaction, account, accounts, onClose }
 
             {/* Tipo */}
             <View style={styles.typeRow}>
-              {(['expense', 'income'] as const).map((t) => (
+              {(['expense', 'income'] as const).map((txnType) => (
                 <Pressable
-                  key={t}
-                  onPress={() => { setType(t); setCategoryId(''); }}
+                  key={txnType}
+                  onPress={() => { setType(txnType); setCategoryId(''); }}
                   style={[
                     styles.typeBtn,
                     {
-                      backgroundColor: type === t ? colors.primary : colors.surface,
-                      borderColor: type === t ? colors.primary : colors.border,
+                      backgroundColor: type === txnType ? colors.primary : colors.surface,
+                      borderColor: type === txnType ? colors.primary : colors.border,
                     },
                   ]}
                 >
-                  <Text style={{ color: type === t ? '#fff' : colors.textSecondary, fontWeight: '600', fontSize: 14 }}>
-                    {t === 'expense' ? 'Despesa' : 'Receita'}
+                  <Text style={{ color: type === txnType ? '#fff' : colors.textSecondary, fontWeight: '600', fontSize: 14 }}>
+                    {txnType === 'expense' ? t('modalTransaction.expense') : t('modalTransaction.income')}
                   </Text>
                 </Pressable>
               ))}
             </View>
 
             {/* Conta */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Conta</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.account')}</Text>
             <Pressable
               onPress={() => setShowAccountPicker(true)}
               style={[styles.selector, { backgroundColor: colors.surface, borderColor: colors.border }]}
@@ -158,7 +160,7 @@ export function EditTransactionModal({ transaction, account, accounts, onClose }
             </Pressable>
 
             {/* Valor */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Valor (€)</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.amount')}</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
               placeholder="0,00"
@@ -169,7 +171,7 @@ export function EditTransactionModal({ transaction, account, accounts, onClose }
             />
 
             {/* Categoria */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Categoria</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.category')}</Text>
             <Pressable
               onPress={() => setShowCategoryPicker(true)}
               style={[styles.selector, { backgroundColor: colors.surface, borderColor: colors.border }]}
@@ -185,13 +187,13 @@ export function EditTransactionModal({ transaction, account, accounts, onClose }
                   </View>
                 );
               })() : (
-                <Text style={[styles.selectorText, { color: colors.textDisabled }]}>Selecionar categoria</Text>
+                <Text style={[styles.selectorText, { color: colors.textDisabled }]}>{t('common.selectCategory')}</Text>
               )}
               <ChevronRight size={16} color={colors.textSecondary} />
             </Pressable>
 
             {/* Data */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Data</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.date')}</Text>
             <Pressable
               onPress={() => setShowDatePicker(true)}
               style={({ pressed }) => [styles.selector, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.8 : 1 }]}
@@ -204,10 +206,10 @@ export function EditTransactionModal({ transaction, account, accounts, onClose }
             </Pressable>
 
             {/* Descrição */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Descrição (opcional)</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.description')}</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-              placeholder="Ex: Supermercado"
+              placeholder={t('modalTransaction.descPlaceholder')}
               placeholderTextColor={colors.textDisabled}
               value={description}
               onChangeText={setDescription}
@@ -218,7 +220,7 @@ export function EditTransactionModal({ transaction, account, accounts, onClose }
 
           <View style={[styles.dangerSection, { borderTopColor: colors.border }]}>
             <Pressable onPress={() => setShowConfirm(true)} style={styles.dangerBtn}>
-              <Text style={[styles.dangerText, { color: colors.error }]}>Apagar transação</Text>
+              <Text style={[styles.dangerText, { color: colors.error }]}>{t('modalTransaction.deleteBtn')}</Text>
             </Pressable>
           </View>
 
@@ -230,7 +232,7 @@ export function EditTransactionModal({ transaction, account, accounts, onClose }
             >
               {loading
                 ? <ActivityIndicator color="#fff" />
-                : <Text style={styles.submitText}>Guardar</Text>
+                : <Text style={styles.submitText}>{t('common.save')}</Text>
               }
             </Pressable>
           </View>
@@ -247,7 +249,7 @@ export function EditTransactionModal({ transaction, account, accounts, onClose }
       />
       <SelectCategoryModal
         visible={showCategoryPicker}
-        title="Selecionar categoria"
+        title={t('common.selectCategory')}
         categories={categories}
         selectedId={categoryId}
         onSelect={setCategoryId}
@@ -262,9 +264,9 @@ export function EditTransactionModal({ transaction, account, accounts, onClose }
 
       <ConfirmModal
         visible={showConfirm}
-        title="Apagar transação"
-        message="O saldo da conta será revertido. Esta ação é irreversível."
-        confirmLabel="Apagar"
+        title={t('modalTransaction.deleteTitle')}
+        message={t('modalTransaction.deleteMsg')}
+        confirmLabel={t('common.delete')}
         onConfirm={handleDelete}
         onCancel={() => setShowConfirm(false)}
       />

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { Plus, ArrowRightLeft, History } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useAccounts } from '@/hooks/useAccounts';
 import { AccountCard } from '@/components/shared/AccountCard';
@@ -16,6 +17,7 @@ type Props = NativeStackScreenProps<AccountsStackParamList, 'AccountsMain'>;
 
 export function AccountsScreen({ navigation }: Props) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { accounts, archived, totalBalance, loading } = useAccounts();
   const [showAdd, setShowAdd] = useState(false);
   const [showAddTransfer, setShowAddTransfer] = useState(false);
@@ -32,7 +34,7 @@ export function AccountsScreen({ navigation }: Props) {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.netWorth, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.netWorthLabel, { color: colors.textSecondary }]}>Saldo total</Text>
+        <Text style={[styles.netWorthLabel, { color: colors.textSecondary }]}>{t('accounts.totalBalance')}</Text>
         <Text style={[styles.netWorthAmount, { color: colors.text }]}>{formatCurrency(totalBalance)}</Text>
       </View>
 
@@ -42,14 +44,14 @@ export function AccountsScreen({ navigation }: Props) {
           style={({ pressed }) => [styles.actionBtn, { backgroundColor: colors.surface, opacity: pressed ? 0.8 : 1 }]}
         >
           <ArrowRightLeft size={18} color={colors.primary} />
-          <Text style={[styles.actionText, { color: colors.text }]}>Nova transferência</Text>
+          <Text style={[styles.actionText, { color: colors.text }]}>{t('accounts.newTransfer')}</Text>
         </Pressable>
         <Pressable
           onPress={() => navigation.navigate('TransfersHistory')}
           style={({ pressed }) => [styles.actionBtn, { backgroundColor: colors.surface, opacity: pressed ? 0.8 : 1 }]}
         >
           <History size={18} color={colors.primary} />
-          <Text style={[styles.actionText, { color: colors.text }]}>Histórico</Text>
+          <Text style={[styles.actionText, { color: colors.text }]}>{t('accounts.history')}</Text>
         </Pressable>
       </View>
 
@@ -58,15 +60,12 @@ export function AccountsScreen({ navigation }: Props) {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
-          <AccountCard
-            account={item}
-            onPress={() => setEditAccount(item)}
-          />
+          <AccountCard account={item} onPress={() => setEditAccount(item)} />
         )}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              Sem contas. Cria a primeira!
+              {t('accounts.noAccounts')}
             </Text>
           </View>
         }
@@ -74,14 +73,10 @@ export function AccountsScreen({ navigation }: Props) {
           archived.length > 0 ? (
             <View style={styles.archivedSection}>
               <View style={[styles.archivedDivider, { backgroundColor: colors.border }]} />
-              <Text style={[styles.archivedHeader, { color: colors.textSecondary }]}>Arquivadas</Text>
+              <Text style={[styles.archivedHeader, { color: colors.textSecondary }]}>{t('accounts.archived')}</Text>
               {archived.map((item) => (
                 <View key={item.id} style={styles.archivedCard}>
-                  <AccountCard
-                    key={item.id}
-                    account={item}
-                    onPress={() => setEditAccount(item)}
-                  />
+                  <AccountCard account={item} onPress={() => setEditAccount(item)} />
                 </View>
               ))}
             </View>

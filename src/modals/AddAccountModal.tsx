@@ -7,6 +7,7 @@ import {
   Wallet, CreditCard, Landmark, Banknote, PiggyBank,
   Briefcase, Home, Car, ShoppingBag, Globe, X,
 } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { createAccount } from '@/api/accounts';
@@ -27,6 +28,7 @@ interface Props {
 export function AddAccountModal({ visible, onClose }: Props) {
   const { colors } = useTheme();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [balance, setBalance] = useState('');
   const [color, setColor] = useState<typeof ACCOUNT_COLORS[number]>(ACCOUNT_COLORS[0]);
@@ -42,9 +44,9 @@ export function AddAccountModal({ visible, onClose }: Props) {
   function handleClose() { reset(); onClose(); }
 
   async function handleSubmit() {
-    if (!name.trim()) { setError('Introduz um nome.'); return; }
+    if (!name.trim()) { setError(t('common.enterName')); return; }
     const amount = parseFloat(balance.replace(',', '.'));
-    if (isNaN(amount) || amount < 0) { setError('Saldo inválido.'); return; }
+    if (isNaN(amount) || amount < 0) { setError(t('modalAccount.invalidBalance')); return; }
     setError('');
     setLoading(true);
     try {
@@ -55,7 +57,7 @@ export function AddAccountModal({ visible, onClose }: Props) {
       });
       handleClose();
     } catch {
-      setError('Erro ao criar conta. Tenta novamente.');
+      setError(t('modalAccount.errorCreate'));
     } finally {
       setLoading(false);
     }
@@ -67,7 +69,7 @@ export function AddAccountModal({ visible, onClose }: Props) {
         <View style={[styles.container, { backgroundColor: colors.background }]}>
           {/* Header */}
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.title, { color: colors.text }]}>Nova conta</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{t('modalAccount.addTitle')}</Text>
             <Pressable onPress={handleClose} hitSlop={8}>
               <X size={22} color={colors.textSecondary} />
             </Pressable>
@@ -77,10 +79,10 @@ export function AddAccountModal({ visible, onClose }: Props) {
             {error ? <Text style={[styles.error, { color: colors.error }]}>{error}</Text> : null}
 
             {/* Nome */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Nome</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.name')}</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-              placeholder="Ex: Conta principal"
+              placeholder={t('modalAccount.namePlaceholder')}
               placeholderTextColor={colors.textDisabled}
               value={name}
               onChangeText={setName}
@@ -88,7 +90,7 @@ export function AddAccountModal({ visible, onClose }: Props) {
             />
 
             {/* Saldo inicial */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Saldo inicial (€)</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('modalAccount.initialBalance')}</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
               placeholder="0,00"
@@ -99,7 +101,7 @@ export function AddAccountModal({ visible, onClose }: Props) {
             />
 
             {/* Cor */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Cor</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.color')}</Text>
             <View style={styles.colorGrid}>
               {ACCOUNT_COLORS.map((c) => (
                 <Pressable
@@ -111,7 +113,7 @@ export function AddAccountModal({ visible, onClose }: Props) {
             </View>
 
             {/* Ícone */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Ícone</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.icon')}</Text>
             <View style={styles.iconGrid}>
               {ACCOUNT_ICONS.map((ic) => {
                 const Icon = ICONS_MAP[ic];
@@ -141,7 +143,7 @@ export function AddAccountModal({ visible, onClose }: Props) {
             >
               {loading
                 ? <ActivityIndicator color="#fff" />
-                : <Text style={styles.submitText}>Criar conta</Text>
+                : <Text style={styles.submitText}>{t('modalAccount.createBtn')}</Text>
               }
             </Pressable>
           </View>

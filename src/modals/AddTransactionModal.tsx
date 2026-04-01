@@ -8,6 +8,7 @@ import {
   Zap, Plane, Coffee, Briefcase, TrendingUp, TrendingDown, Gift, PiggyBank,
   Banknote, Wallet, Dumbbell, Shirt, Music, X, ChevronRight, CalendarDays,
 } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useCategories } from '@/hooks/useCategories';
@@ -39,6 +40,7 @@ interface Props {
 export function AddTransactionModal({ visible, account, accounts, onClose }: Props) {
   const { colors } = useTheme();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { incomeCategories, expenseCategories } = useCategories();
 
   const [type, setType] = useState<'income' | 'expense'>('expense');
@@ -66,9 +68,9 @@ export function AddTransactionModal({ visible, account, accounts, onClose }: Pro
 
   async function handleSubmit() {
     const cents = amountToCents(parseFloat(amount.replace(',', '.')));
-    if (isNaN(cents) || cents <= 0) { setError('Valor inválido.'); return; }
-    if (!selectedAccount) { setError('Seleciona uma conta.'); return; }
-    if (!categoryId) { setError('Seleciona uma categoria.'); return; }
+    if (isNaN(cents) || cents <= 0) { setError(t('common.invalidAmount')); return; }
+    if (!selectedAccount) { setError(t('modalTransaction.selectAccount')); return; }
+    if (!categoryId) { setError(t('modalTransaction.selectCategory')); return; }
 
     setError('');
     setLoading(true);
@@ -83,7 +85,7 @@ export function AddTransactionModal({ visible, account, accounts, onClose }: Pro
       });
       handleClose();
     } catch {
-      setError('Erro ao criar transação. Tenta novamente.');
+      setError(t('modalTransaction.errorCreate'));
     } finally {
       setLoading(false);
     }
@@ -94,7 +96,7 @@ export function AddTransactionModal({ visible, account, accounts, onClose }: Pro
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <View style={[styles.container, { backgroundColor: colors.background }]}>
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.title, { color: colors.text }]}>Nova transação</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{t('modalTransaction.addTitle')}</Text>
             <Pressable onPress={handleClose} hitSlop={8}>
               <X size={22} color={colors.textSecondary} />
             </Pressable>
@@ -105,27 +107,27 @@ export function AddTransactionModal({ visible, account, accounts, onClose }: Pro
 
             {/* Tipo */}
             <View style={styles.typeRow}>
-              {(['expense', 'income'] as const).map((t) => (
+              {(['expense', 'income'] as const).map((txnType) => (
                 <Pressable
-                  key={t}
-                  onPress={() => { setType(t); setCategoryId(''); }}
+                  key={txnType}
+                  onPress={() => { setType(txnType); setCategoryId(''); }}
                   style={[
                     styles.typeBtn,
                     {
-                      backgroundColor: type === t ? colors.primary : colors.surface,
-                      borderColor: type === t ? colors.primary : colors.border,
+                      backgroundColor: type === txnType ? colors.primary : colors.surface,
+                      borderColor: type === txnType ? colors.primary : colors.border,
                     },
                   ]}
                 >
-                  <Text style={{ color: type === t ? '#fff' : colors.textSecondary, fontWeight: '600', fontSize: 14 }}>
-                    {t === 'expense' ? 'Despesa' : 'Receita'}
+                  <Text style={{ color: type === txnType ? '#fff' : colors.textSecondary, fontWeight: '600', fontSize: 14 }}>
+                    {txnType === 'expense' ? t('modalTransaction.expense') : t('modalTransaction.income')}
                   </Text>
                 </Pressable>
               ))}
             </View>
 
             {/* Conta */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Conta</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.account')}</Text>
             <Pressable
               onPress={() => setShowAccountPicker(true)}
               style={[styles.selector, { backgroundColor: colors.surface, borderColor: colors.border }]}
@@ -138,13 +140,13 @@ export function AddTransactionModal({ visible, account, accounts, onClose }: Pro
                   <Text style={[styles.selectorText, { color: colors.text }]}>{selectedAccount.name}</Text>
                 </View>
               ) : (
-                <Text style={[styles.selectorText, { color: colors.textDisabled }]}>Selecionar conta</Text>
+                <Text style={[styles.selectorText, { color: colors.textDisabled }]}>{t('common.selectAccount')}</Text>
               )}
               <ChevronRight size={16} color={colors.textSecondary} />
             </Pressable>
 
             {/* Valor */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Valor (€)</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.amount')}</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
               placeholder="0,00"
@@ -155,7 +157,7 @@ export function AddTransactionModal({ visible, account, accounts, onClose }: Pro
             />
 
             {/* Categoria */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Categoria</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.category')}</Text>
             <Pressable
               onPress={() => setShowCategoryPicker(true)}
               style={[styles.selector, { backgroundColor: colors.surface, borderColor: colors.border }]}
@@ -171,13 +173,13 @@ export function AddTransactionModal({ visible, account, accounts, onClose }: Pro
                   </View>
                 );
               })() : (
-                <Text style={[styles.selectorText, { color: colors.textDisabled }]}>Selecionar categoria</Text>
+                <Text style={[styles.selectorText, { color: colors.textDisabled }]}>{t('common.selectCategory')}</Text>
               )}
               <ChevronRight size={16} color={colors.textSecondary} />
             </Pressable>
 
             {/* Data */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Data</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.date')}</Text>
             <Pressable
               onPress={() => setShowDatePicker(true)}
               style={({ pressed }) => [styles.selector, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.8 : 1 }]}
@@ -190,10 +192,10 @@ export function AddTransactionModal({ visible, account, accounts, onClose }: Pro
             </Pressable>
 
             {/* Descrição */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Descrição (opcional)</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.description')}</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-              placeholder="Ex: Supermercado"
+              placeholder={t('modalTransaction.descPlaceholder')}
               placeholderTextColor={colors.textDisabled}
               value={description}
               onChangeText={setDescription}
@@ -209,7 +211,7 @@ export function AddTransactionModal({ visible, account, accounts, onClose }: Pro
             >
               {loading
                 ? <ActivityIndicator color="#fff" />
-                : <Text style={styles.submitText}>Criar transação</Text>
+                : <Text style={styles.submitText}>{t('modalTransaction.createBtn')}</Text>
               }
             </Pressable>
           </View>
@@ -226,7 +228,7 @@ export function AddTransactionModal({ visible, account, accounts, onClose }: Pro
       />
       <SelectCategoryModal
         visible={showCategoryPicker}
-        title="Selecionar categoria"
+        title={t('common.selectCategory')}
         categories={categories}
         selectedId={categoryId}
         onSelect={setCategoryId}

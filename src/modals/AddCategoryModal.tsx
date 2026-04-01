@@ -8,6 +8,7 @@ import {
   Zap, Plane, Coffee, Briefcase, TrendingUp, TrendingDown, Gift, PiggyBank,
   Banknote, Wallet, Dumbbell, Shirt, Music, X,
 } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { createCategory } from '@/api/categories';
@@ -31,6 +32,7 @@ interface Props {
 export function AddCategoryModal({ visible, initialType = 'expense', onClose }: Props) {
   const { colors } = useTheme();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [color, setColor] = useState<typeof CATEGORY_COLORS[number]>(CATEGORY_COLORS[0]);
   const [icon, setIcon] = useState<typeof CATEGORY_ICONS[number]>(CATEGORY_ICONS[0]);
@@ -45,14 +47,14 @@ export function AddCategoryModal({ visible, initialType = 'expense', onClose }: 
   function handleClose() { reset(); onClose(); }
 
   async function handleSubmit() {
-    if (!name.trim()) { setError('Introduz um nome.'); return; }
+    if (!name.trim()) { setError(t('common.enterName')); return; }
     setError('');
     setLoading(true);
     try {
       await createCategory(user!.uid, { name: name.trim(), type: initialType, color, icon });
       handleClose();
     } catch {
-      setError('Erro ao criar categoria. Tenta novamente.');
+      setError(t('modalCategory.errorCreate'));
     } finally {
       setLoading(false);
     }
@@ -63,7 +65,7 @@ export function AddCategoryModal({ visible, initialType = 'expense', onClose }: 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <View style={[styles.container, { backgroundColor: colors.background }]}>
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.title, { color: colors.text }]}>Nova categoria</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{t('modalCategory.addTitle')}</Text>
             <Pressable onPress={handleClose} hitSlop={8}>
               <X size={22} color={colors.textSecondary} />
             </Pressable>
@@ -73,25 +75,25 @@ export function AddCategoryModal({ visible, initialType = 'expense', onClose }: 
             {error ? <Text style={[styles.error, { color: colors.error }]}>{error}</Text> : null}
 
             <View style={styles.typeRow}>
-              <Text style={[styles.label, { color: colors.textSecondary, marginTop: 0, marginBottom: 0 }]}>Tipo</Text>
+              <Text style={[styles.label, { color: colors.textSecondary, marginTop: 0, marginBottom: 0 }]}>{t('modalCategory.type')}</Text>
               <View style={[styles.typeBadge, { backgroundColor: colors.primary + '22' }]}>
                 <Text style={[styles.typeValue, { color: colors.primary }]}>
-                  {initialType === 'expense' ? 'Despesa' : 'Receita'}
+                  {initialType === 'expense' ? t('categories.expense') : t('categories.income')}
                 </Text>
               </View>
             </View>
 
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Nome</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.name')}</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-              placeholder={initialType === 'expense' ? 'Ex: Restaurantes' : 'Ex: Salário'}
+              placeholder={initialType === 'expense' ? t('modalCategory.namePlaceholderExpense') : t('modalCategory.namePlaceholderIncome')}
               placeholderTextColor={colors.textDisabled}
               value={name}
               onChangeText={setName}
               maxLength={50}
             />
 
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Cor</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.color')}</Text>
             <View style={styles.colorGrid}>
               {CATEGORY_COLORS.map((c) => (
                 <Pressable
@@ -102,7 +104,7 @@ export function AddCategoryModal({ visible, initialType = 'expense', onClose }: 
               ))}
             </View>
 
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Ícone</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.icon')}</Text>
             <View style={styles.iconGrid}>
               {CATEGORY_ICONS.map((ic) => {
                 const Icon = ICONS_MAP[ic];
@@ -131,7 +133,7 @@ export function AddCategoryModal({ visible, initialType = 'expense', onClose }: 
             >
               {loading
                 ? <ActivityIndicator color="#fff" />
-                : <Text style={styles.submitText}>Criar categoria</Text>
+                : <Text style={styles.submitText}>{t('modalCategory.createBtn')}</Text>
               }
             </Pressable>
           </View>

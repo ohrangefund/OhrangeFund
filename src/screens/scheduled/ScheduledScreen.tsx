@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { Plus } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useCategories } from '@/hooks/useCategories';
@@ -16,6 +17,7 @@ import type { ScheduledTransaction, ScheduledTransfer } from '@/types/models';
 
 export function ScheduledScreen() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { accounts } = useAccounts();
   const { incomeCategories, expenseCategories } = useCategories();
   const { scheduled: scheduledTxns, loading: loadingTxns } = useScheduledTransactions();
@@ -56,7 +58,7 @@ export function ScheduledScreen() {
             style={[styles.tab, activeTab === tab && [styles.tabActive, { borderBottomColor: colors.primary }]]}
           >
             <Text style={[styles.tabText, { color: activeTab === tab ? colors.primary : colors.textSecondary }]}>
-              {tab === 'transactions' ? 'Transações' : 'Transferências'}
+              {tab === 'transactions' ? t('scheduled.transactions') : t('scheduled.transfers')}
             </Text>
           </Pressable>
         ))}
@@ -77,7 +79,7 @@ export function ScheduledScreen() {
           )}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Sem agendamentos.</Text>
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t('scheduled.noTransactions')}</Text>
             </View>
           }
         />
@@ -95,7 +97,7 @@ export function ScheduledScreen() {
           )}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Sem transferências agendadas.</Text>
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t('scheduled.noTransfers')}</Text>
             </View>
           }
         />

@@ -4,6 +4,7 @@ import {
   Pressable, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { X, ChevronRight, CalendarDays } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useAccounts } from '@/hooks/useAccounts';
@@ -23,6 +24,7 @@ interface Props {
 export function AddTransferModal({ visible, fromAccount, onClose }: Props) {
   const { colors } = useTheme();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { accounts } = useAccounts();
 
   const [amount, setAmount] = useState('');
@@ -49,9 +51,9 @@ export function AddTransferModal({ visible, fromAccount, onClose }: Props) {
 
   async function handleSubmit() {
     const cents = amountToCents(parseFloat(amount.replace(',', '.')));
-    if (isNaN(cents) || cents <= 0) { setError('Valor inválido.'); return; }
-    if (!effectiveFrom) { setError('Seleciona a conta de origem.'); return; }
-    if (!toAccount) { setError('Seleciona a conta de destino.'); return; }
+    if (isNaN(cents) || cents <= 0) { setError(t('common.invalidAmount')); return; }
+    if (!effectiveFrom) { setError(t('modalTransfer.selectFrom')); return; }
+    if (!toAccount) { setError(t('modalTransfer.selectTo')); return; }
 
     setError('');
     setLoading(true);
@@ -65,7 +67,7 @@ export function AddTransferModal({ visible, fromAccount, onClose }: Props) {
       });
       handleClose();
     } catch {
-      setError('Erro ao criar transferência. Tenta novamente.');
+      setError(t('modalTransfer.errorCreate'));
     } finally {
       setLoading(false);
     }
@@ -76,7 +78,7 @@ export function AddTransferModal({ visible, fromAccount, onClose }: Props) {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <View style={[styles.container, { backgroundColor: colors.background }]}>
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.title, { color: colors.text }]}>Nova transferência</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{t('modalTransfer.addTitle')}</Text>
             <Pressable onPress={handleClose} hitSlop={8}>
               <X size={22} color={colors.textSecondary} />
             </Pressable>
@@ -86,7 +88,7 @@ export function AddTransferModal({ visible, fromAccount, onClose }: Props) {
             {error ? <Text style={[styles.error, { color: colors.error }]}>{error}</Text> : null}
 
             {/* De */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>De</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.from')}</Text>
             {fromAccount ? (
               <View style={[styles.staticField, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <View style={[styles.accountDot, { backgroundColor: fromAccount.color }]} />
@@ -103,14 +105,14 @@ export function AddTransferModal({ visible, fromAccount, onClose }: Props) {
                     <Text style={[styles.selectorText, { color: colors.text }]}>{fromAccountSelected.name}</Text>
                   </View>
                 ) : (
-                  <Text style={[styles.selectorText, { color: colors.textDisabled }]}>Selecionar conta</Text>
+                  <Text style={[styles.selectorText, { color: colors.textDisabled }]}>{t('common.selectAccount')}</Text>
                 )}
                 <ChevronRight size={16} color={colors.textSecondary} />
               </Pressable>
             )}
 
             {/* Para */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Para</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.to')}</Text>
             <Pressable
               onPress={() => setShowToPicker(true)}
               style={({ pressed }) => [styles.selector, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.8 : 1 }]}
@@ -121,13 +123,13 @@ export function AddTransferModal({ visible, fromAccount, onClose }: Props) {
                   <Text style={[styles.selectorText, { color: colors.text }]}>{toAccount.name}</Text>
                 </View>
               ) : (
-                <Text style={[styles.selectorText, { color: colors.textDisabled }]}>Selecionar conta</Text>
+                <Text style={[styles.selectorText, { color: colors.textDisabled }]}>{t('common.selectAccount')}</Text>
               )}
               <ChevronRight size={16} color={colors.textSecondary} />
             </Pressable>
 
             {/* Valor */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Valor (€)</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.amount')}</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
               placeholder="0,00"
@@ -138,7 +140,7 @@ export function AddTransferModal({ visible, fromAccount, onClose }: Props) {
             />
 
             {/* Data */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Data</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.date')}</Text>
             <Pressable
               onPress={() => setShowDatePicker(true)}
               style={({ pressed }) => [styles.selector, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.8 : 1 }]}
@@ -151,10 +153,10 @@ export function AddTransferModal({ visible, fromAccount, onClose }: Props) {
             </Pressable>
 
             {/* Descrição */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Descrição (opcional)</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.description')}</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-              placeholder="Ex: Pagamento de renda"
+              placeholder={t('modalTransfer.descPlaceholder')}
               placeholderTextColor={colors.textDisabled}
               value={description}
               onChangeText={setDescription}
@@ -170,7 +172,7 @@ export function AddTransferModal({ visible, fromAccount, onClose }: Props) {
             >
               {loading
                 ? <ActivityIndicator color="#fff" />
-                : <Text style={styles.submitText}>Transferir</Text>
+                : <Text style={styles.submitText}>{t('modalTransfer.transferBtn')}</Text>
               }
             </Pressable>
           </View>

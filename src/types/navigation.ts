@@ -32,6 +32,7 @@ export type ScheduledStackParamList = {
 export type SettingsStackParamList = {
   SettingsMain: undefined;
   Visuals: undefined;
+  Language: undefined;
 };
 
 export type AuthScreenProps<T extends keyof AuthStackParamList> =

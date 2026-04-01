@@ -1,22 +1,24 @@
 import { useEffect, useRef } from 'react';
 import { View, Text, Pressable, StyleSheet, Animated } from 'react-native';
 import { Home, Wallet, CalendarClock, BarChart2, Tag, Settings } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useDrawer } from '@/context/DrawerContext';
 
 const DRAWER_WIDTH = 280;
 
 const MENU_ITEMS = [
-  { key: 'Home',       label: 'Início',         Icon: Home },
-  { key: 'Accounts',  label: 'Contas',          Icon: Wallet },
-  { key: 'Scheduled', label: 'Agendamentos',    Icon: CalendarClock },
-  { key: 'Analytics', label: 'Gráficos',        Icon: BarChart2 },
-  { key: 'Categories',label: 'Categorias',      Icon: Tag },
-  { key: 'Settings',  label: 'Configurações',   Icon: Settings },
+  { key: 'Home',        labelKey: 'drawer.home',       Icon: Home },
+  { key: 'Accounts',   labelKey: 'drawer.accounts',   Icon: Wallet },
+  { key: 'Scheduled',  labelKey: 'drawer.scheduled',  Icon: CalendarClock },
+  { key: 'Analytics',  labelKey: 'drawer.analytics',  Icon: BarChart2 },
+  { key: 'Categories', labelKey: 'drawer.categories', Icon: Tag },
+  { key: 'Settings',   labelKey: 'drawer.settings',   Icon: Settings },
 ];
 
 export function DrawerMenu() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { isOpen, close, activeTab, navigateTo } = useDrawer();
 
   const translateX = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
@@ -54,7 +56,7 @@ export function DrawerMenu() {
 
         <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
-        {MENU_ITEMS.map(({ key, label, Icon }) => {
+        {MENU_ITEMS.map(({ key, labelKey, Icon }) => {
           const active = activeTab === key;
           return (
             <Pressable
@@ -70,7 +72,7 @@ export function DrawerMenu() {
                 <Icon size={20} color={active ? colors.primary : colors.textSecondary} />
               </View>
               <Text style={[styles.itemLabel, { color: active ? colors.primary : colors.text, fontWeight: active ? '700' : '500' }]}>
-                {label}
+                {t(labelKey as any)}
               </Text>
               {active && <View style={[styles.activeBar, { backgroundColor: colors.primary }]} />}
             </Pressable>

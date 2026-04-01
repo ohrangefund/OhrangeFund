@@ -7,6 +7,7 @@ import {
   Wallet, CreditCard, Landmark, Banknote, PiggyBank,
   Briefcase, Home, Car, ShoppingBag, Globe, X,
 } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { updateAccount, archiveAccount } from '@/api/accounts';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
@@ -25,6 +26,7 @@ interface Props {
 
 export function EditAccountModal({ account, onClose }: Props) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [color, setColor] = useState<typeof ACCOUNT_COLORS[number]>(ACCOUNT_COLORS[0]);
   const [icon, setIcon] = useState<typeof ACCOUNT_ICONS[number]>(ACCOUNT_ICONS[0]);
@@ -45,14 +47,14 @@ export function EditAccountModal({ account, onClose }: Props) {
 
   async function handleSave() {
     if (!account) return;
-    if (!name.trim()) { setError('Introduz um nome.'); return; }
+    if (!name.trim()) { setError(t('common.enterName')); return; }
     setError('');
     setLoading(true);
     try {
       await updateAccount(account.id, { name: name.trim(), color, icon, show_in_general: showInGeneral });
       onClose();
     } catch {
-      setError('Erro ao guardar. Tenta novamente.');
+      setError(t('common.errorSave'));
     } finally {
       setLoading(false);
     }
@@ -65,7 +67,7 @@ export function EditAccountModal({ account, onClose }: Props) {
       await archiveAccount(account.id, !account.archived);
       onClose();
     } catch {
-      setError('Erro ao atualizar conta. Tenta novamente.');
+      setError(t('common.errorSave'));
     } finally {
       setLoading(false);
     }
@@ -76,7 +78,7 @@ export function EditAccountModal({ account, onClose }: Props) {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <View style={[styles.container, { backgroundColor: colors.background }]}>
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.title, { color: colors.text }]}>Editar conta</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{t('modalAccount.editTitle')}</Text>
             <Pressable onPress={onClose} hitSlop={8}>
               <X size={22} color={colors.textSecondary} />
             </Pressable>
@@ -85,7 +87,7 @@ export function EditAccountModal({ account, onClose }: Props) {
           <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
             {error ? <Text style={[styles.error, { color: colors.error }]}>{error}</Text> : null}
 
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Nome</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.name')}</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
               value={name}
@@ -94,7 +96,7 @@ export function EditAccountModal({ account, onClose }: Props) {
               placeholderTextColor={colors.textDisabled}
             />
 
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Cor</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.color')}</Text>
             <View style={styles.colorGrid}>
               {ACCOUNT_COLORS.map((c) => (
                 <Pressable
@@ -105,7 +107,7 @@ export function EditAccountModal({ account, onClose }: Props) {
               ))}
             </View>
 
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Ícone</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.icon')}</Text>
             <View style={styles.iconGrid}>
               {ACCOUNT_ICONS.map((ic) => {
                 const Icon = ICONS_MAP[ic];
@@ -125,7 +127,7 @@ export function EditAccountModal({ account, onClose }: Props) {
               })}
             </View>
 
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Mostrar no Geral</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('modalAccount.showInGeneral')}</Text>
             <View style={styles.typeRow}>
               {([true, false] as const).map((val) => (
                 <Pressable
@@ -140,7 +142,7 @@ export function EditAccountModal({ account, onClose }: Props) {
                   ]}
                 >
                   <Text style={{ color: showInGeneral === val ? '#fff' : colors.textSecondary, fontWeight: '600', fontSize: 14 }}>
-                    {val ? 'Sim' : 'Não'}
+                    {val ? t('common.yes') : t('common.no')}
                   </Text>
                 </Pressable>
               ))}
@@ -151,7 +153,7 @@ export function EditAccountModal({ account, onClose }: Props) {
           <View style={[styles.dangerSection, { borderTopColor: colors.border }]}>
             <Pressable onPress={() => setShowArchiveConfirm(true)} style={styles.dangerBtn}>
               <Text style={[styles.dangerText, { color: account?.archived ? colors.success : colors.error }]}>
-                {account?.archived ? 'Ativar conta' : 'Arquivar conta'}
+                {account?.archived ? t('modalAccount.unarchive') : t('modalAccount.archive')}
               </Text>
             </Pressable>
           </View>
@@ -164,7 +166,7 @@ export function EditAccountModal({ account, onClose }: Props) {
             >
               {loading
                 ? <ActivityIndicator color="#fff" />
-                : <Text style={styles.submitText}>Guardar</Text>
+                : <Text style={styles.submitText}>{t('common.save')}</Text>
               }
             </Pressable>
           </View>
@@ -172,8 +174,8 @@ export function EditAccountModal({ account, onClose }: Props) {
       </KeyboardAvoidingView>
       <ConfirmModal
         visible={showArchiveConfirm}
-        title={account?.archived ? 'Ativar conta' : 'Arquivar conta'}
-        message={account?.archived ? 'A conta voltará a aparecer na lista.' : 'A conta ficará oculta mas os dados são mantidos.'}
+        title={account?.archived ? t('modalAccount.unarchive') : t('modalAccount.archive')}
+        message={account?.archived ? t('modalAccount.unarchiveMsg') : t('modalAccount.archiveMsg')}
         onConfirm={handleArchiveConfirm}
         onCancel={() => setShowArchiveConfirm(false)}
       />

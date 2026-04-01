@@ -2,34 +2,34 @@ import { useState, useRef } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { useTranslation } from 'react-i18next';
 import { auth, db } from '@/api/firebase';
 import { createDefaultCategories } from '@/api/categories';
 import { useTheme } from '@/context/ThemeContext';
+import { LanguagePicker } from '@/components/ui/LanguagePicker';
 import type { AuthScreenProps } from '@/types/navigation';
-
-function getErrorMessage(code: string): string {
-  switch (code) {
-    case 'auth/email-already-in-use':
-      return 'Este email já está registado.';
-    case 'auth/invalid-email':
-      return 'Email inválido.';
-    case 'auth/weak-password':
-      return 'A password deve ter pelo menos 6 caracteres.';
-    default:
-      return 'Erro ao criar conta. Tenta novamente.';
-  }
-}
 
 export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
+  const { language } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const submitting = useRef(false);
 
+  function getErrorMessage(code: string): string {
+    switch (code) {
+      case 'auth/email-already-in-use': return t('auth.errors.emailInUse');
+      case 'auth/invalid-email': return t('auth.errors.invalidEmail');
+      case 'auth/weak-password': return t('auth.errors.weakPassword');
+      default: return t('auth.errors.createAccount');
+    }
+  }
+
   async function handleRegister() {
-    if (!email || !password) { setError('Preenche todos os campos.'); return; }
+    if (!email || !password) { setError(t('auth.fillAllFields')); return; }
     if (submitting.current) return;
     submitting.current = true;
     setError('');
@@ -43,7 +43,7 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
         theme: 'dark',
         created_at: serverTimestamp(),
       });
-      await createDefaultCategories(user.uid);
+      await createDefaultCategories(user.uid, language);
     } catch (e: any) {
       setError(getErrorMessage(e.code));
     } finally {
@@ -54,13 +54,15 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.title, { color: colors.text }]}>Criar conta</Text>
+      <Text style={[styles.title, { color: colors.text }]}>{t('auth.register')}</Text>
+
+      <LanguagePicker style={styles.langPicker} />
 
       {error ? <Text style={[styles.error, { color: colors.error }]}>{error}</Text> : null}
 
       <TextInput
         style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-        placeholder="Email"
+        placeholder={t('auth.email')}
         placeholderTextColor={colors.textSecondary}
         value={email}
         onChangeText={setEmail}
@@ -69,7 +71,7 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
       />
       <TextInput
         style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-        placeholder="Password (mínimo 6 caracteres)"
+        placeholder={t('auth.passwordMin')}
         placeholderTextColor={colors.textSecondary}
         value={password}
         onChangeText={setPassword}
@@ -83,13 +85,13 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
       >
         {loading
           ? <ActivityIndicator color={colors.primaryForeground} />
-          : <Text style={[styles.primaryButtonText, { color: colors.primaryForeground }]}>Criar conta</Text>
+          : <Text style={[styles.primaryButtonText, { color: colors.primaryForeground }]}>{t('auth.registerBtn')}</Text>
         }
       </Pressable>
 
       <Pressable onPress={() => navigation.navigate('Login')}>
         <Text style={[styles.link, { color: colors.textSecondary }]}>
-          Já tens conta? <Text style={{ color: colors.primary, fontWeight: '600' }}>Entra</Text>
+          {t('auth.haveAccount')}<Text style={{ color: colors.primary, fontWeight: '600' }}>{t('auth.signInLink')}</Text>
         </Text>
       </Pressable>
     </View>
@@ -98,22 +100,11 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', padding: 24 },
-  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 24 },
+  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 16 },
+  langPicker: { marginBottom: 20 },
   error: { marginBottom: 12, fontSize: 14 },
-  input: {
-    borderWidth: 1,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 12,
-    fontSize: 16,
-  },
-  primaryButton: {
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginBottom: 16,
-    marginTop: 8,
-  },
+  input: { borderWidth: 1, borderRadius: 14, padding: 16, marginBottom: 12, fontSize: 16 },
+  primaryButton: { borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginBottom: 16, marginTop: 8 },
   primaryButtonText: { fontSize: 16, fontWeight: '600' },
   link: { textAlign: 'center', fontSize: 14 },
 });

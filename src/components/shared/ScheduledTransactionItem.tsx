@@ -4,10 +4,11 @@ import {
   Zap, Plane, Coffee, Briefcase, TrendingUp, TrendingDown, Gift, PiggyBank,
   Banknote, Wallet, Dumbbell, Shirt, Music,
 } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { formatCurrency } from '@/utils/currency';
 import { formatDate } from '@/utils/date';
-import type { ScheduledTransaction, Account, Category, Recurrence } from '@/types/models';
+import type { ScheduledTransaction, Account, Category } from '@/types/models';
 
 const ICONS: Record<string, React.FC<{ size: number; color: string }>> = {
   'shopping-cart': ShoppingCart, 'utensils': Utensils, 'car': Car,
@@ -16,13 +17,6 @@ const ICONS: Record<string, React.FC<{ size: number; color: string }>> = {
   'trending-up': TrendingUp, 'trending-down': TrendingDown, 'gift': Gift,
   'piggy-bank': PiggyBank, 'banknote': Banknote, 'wallet': Wallet,
   'dumbbell': Dumbbell, 'shirt': Shirt, 'music': Music,
-};
-
-const RECURRENCE_LABEL: Record<Recurrence, string> = {
-  once: 'Uma vez',
-  weekly: 'Semanal',
-  monthly: 'Mensal',
-  yearly: 'Anual',
 };
 
 interface Props {
@@ -34,6 +28,7 @@ interface Props {
 
 export function ScheduledTransactionItem({ item, accounts, categories, onPress }: Props) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const category = categories.find((c) => c.id === item.category_id);
   const account = accounts.find((a) => a.id === item.account_id);
   const Icon = ICONS[category?.icon ?? ''] ?? ShoppingCart;
@@ -59,7 +54,7 @@ export function ScheduledTransactionItem({ item, accounts, categories, onPress }
           </Text>
           <View style={[styles.badge, { backgroundColor: colors.primary + '18' }]}>
             <Text style={[styles.badgeText, { color: colors.primary }]}>
-              {RECURRENCE_LABEL[item.recurrence]}
+              {t(`modalScheduledTxn.${item.recurrence}` as any)}
             </Text>
           </View>
         </View>

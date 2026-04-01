@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { Plus } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useCategories } from '@/hooks/useCategories';
 import { CategoryItem } from '@/components/shared/CategoryItem';
@@ -10,6 +11,7 @@ import type { Category } from '@/types/models';
 
 export function CategoriesScreen() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { incomeCategories, expenseCategories, loading } = useCategories();
   const [activeTab, setActiveTab] = useState<'expense' | 'income'>('expense');
   const [showAdd, setShowAdd] = useState(false);
@@ -32,16 +34,10 @@ export function CategoriesScreen() {
           <Pressable
             key={tab}
             onPress={() => setActiveTab(tab)}
-            style={[
-              styles.tab,
-              activeTab === tab && [styles.tabActive, { borderBottomColor: colors.primary }],
-            ]}
+            style={[styles.tab, activeTab === tab && [styles.tabActive, { borderBottomColor: colors.primary }]]}
           >
-            <Text style={[
-              styles.tabText,
-              { color: activeTab === tab ? colors.primary : colors.textSecondary },
-            ]}>
-              {tab === 'expense' ? 'Despesa' : 'Receita'}
+            <Text style={[styles.tabText, { color: activeTab === tab ? colors.primary : colors.textSecondary }]}>
+              {tab === 'expense' ? t('categories.expense') : t('categories.income')}
             </Text>
           </Pressable>
         ))}
@@ -57,7 +53,7 @@ export function CategoriesScreen() {
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              Sem categorias. Cria a primeira!
+              {t('categories.noCategories')}
             </Text>
           </View>
         }
@@ -70,15 +66,8 @@ export function CategoriesScreen() {
         <Plus size={26} color="#fff" />
       </Pressable>
 
-      <AddCategoryModal
-        visible={showAdd}
-        initialType={activeTab}
-        onClose={() => setShowAdd(false)}
-      />
-      <EditCategoryModal
-        category={editCategory}
-        onClose={() => setEditCategory(null)}
-      />
+      <AddCategoryModal visible={showAdd} initialType={activeTab} onClose={() => setShowAdd(false)} />
+      <EditCategoryModal category={editCategory} onClose={() => setEditCategory(null)} />
     </View>
   );
 }
@@ -86,14 +75,8 @@ export function CategoriesScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  tabs: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-  },
-  tab: {
-    flex: 1, paddingVertical: 14, alignItems: 'center',
-    borderBottomWidth: 2, borderBottomColor: 'transparent',
-  },
+  tabs: { flexDirection: 'row', borderBottomWidth: 1 },
+  tab: { flex: 1, paddingVertical: 14, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
   tabActive: {},
   tabText: { fontSize: 15, fontWeight: '600' },
   list: { padding: 16, paddingBottom: 100 },

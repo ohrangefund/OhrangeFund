@@ -1,16 +1,10 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ArrowRightLeft } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { formatCurrency } from '@/utils/currency';
 import { formatDate } from '@/utils/date';
-import type { ScheduledTransfer, Account, Recurrence } from '@/types/models';
-
-const RECURRENCE_LABEL: Record<Recurrence, string> = {
-  once: 'Uma vez',
-  weekly: 'Semanal',
-  monthly: 'Mensal',
-  yearly: 'Anual',
-};
+import type { ScheduledTransfer, Account } from '@/types/models';
 
 interface Props {
   item: ScheduledTransfer;
@@ -20,6 +14,7 @@ interface Props {
 
 export function ScheduledTransferItem({ item, accounts, onPress }: Props) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const fromAccount = accounts.find((a) => a.id === item.from_account_id);
   const toAccount = accounts.find((a) => a.id === item.to_account_id);
   const label = item.description || `${fromAccount?.name ?? '—'} → ${toAccount?.name ?? '—'}`;
@@ -42,7 +37,7 @@ export function ScheduledTransferItem({ item, accounts, onPress }: Props) {
           </Text>
           <View style={[styles.badge, { backgroundColor: colors.primary + '18' }]}>
             <Text style={[styles.badgeText, { color: colors.primary }]}>
-              {RECURRENCE_LABEL[item.recurrence]}
+              {t(`modalScheduledTxn.${item.recurrence}` as any)}
             </Text>
           </View>
         </View>

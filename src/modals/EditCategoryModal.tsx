@@ -8,6 +8,7 @@ import {
   Zap, Plane, Coffee, Briefcase, TrendingUp, TrendingDown, Gift, PiggyBank,
   Banknote, Wallet, Dumbbell, Shirt, Music, X,
 } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useCategories } from '@/hooks/useCategories';
@@ -33,6 +34,7 @@ interface Props {
 export function EditCategoryModal({ category, onClose }: Props) {
   const { colors } = useTheme();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { incomeCategories, expenseCategories } = useCategories();
   const [name, setName] = useState('');
   const [color, setColor] = useState<typeof CATEGORY_COLORS[number]>(CATEGORY_COLORS[0]);
@@ -60,14 +62,14 @@ export function EditCategoryModal({ category, onClose }: Props) {
 
   async function handleSave() {
     if (!category) return;
-    if (!name.trim()) { setError('Introduz um nome.'); return; }
+    if (!name.trim()) { setError(t('common.enterName')); return; }
     setError('');
     setLoading(true);
     try {
       await updateCategory(category.id, { name: name.trim(), color, icon });
       onClose();
     } catch {
-      setError('Erro ao guardar. Tenta novamente.');
+      setError(t('common.errorSave'));
     } finally {
       setLoading(false);
     }
@@ -94,7 +96,7 @@ export function EditCategoryModal({ category, onClose }: Props) {
       }
       onClose();
     } catch {
-      setError('Erro ao apagar. Tenta novamente.');
+      setError(t('common.errorDelete'));
       setShowConfirm(false);
     } finally {
       setLoading(false);
@@ -106,7 +108,7 @@ export function EditCategoryModal({ category, onClose }: Props) {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <View style={[styles.container, { backgroundColor: colors.background }]}>
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.title, { color: colors.text }]}>Editar categoria</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{t('modalCategory.editTitle')}</Text>
             <Pressable onPress={onClose} hitSlop={8}>
               <X size={22} color={colors.textSecondary} />
             </Pressable>
@@ -115,7 +117,7 @@ export function EditCategoryModal({ category, onClose }: Props) {
           <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
             {error ? <Text style={[styles.error, { color: colors.error }]}>{error}</Text> : null}
 
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Nome</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.name')}</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
               value={name}
@@ -124,7 +126,7 @@ export function EditCategoryModal({ category, onClose }: Props) {
               placeholderTextColor={colors.textDisabled}
             />
 
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Cor</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.color')}</Text>
             <View style={styles.colorGrid}>
               {CATEGORY_COLORS.map((c) => (
                 <Pressable
@@ -135,7 +137,7 @@ export function EditCategoryModal({ category, onClose }: Props) {
               ))}
             </View>
 
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Ícone</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.icon')}</Text>
             <View style={styles.iconGrid}>
               {CATEGORY_ICONS.map((ic) => {
                 const Icon = ICONS_MAP[ic];
@@ -163,7 +165,7 @@ export function EditCategoryModal({ category, onClose }: Props) {
               style={styles.dangerBtn}
             >
               <Text style={[styles.dangerText, { color: category?.is_default ? colors.textDisabled : colors.error }]}>
-                Apagar categoria
+                {t('modalCategory.deleteBtn')}
               </Text>
             </Pressable>
           </View>
@@ -176,7 +178,7 @@ export function EditCategoryModal({ category, onClose }: Props) {
             >
               {loading
                 ? <ActivityIndicator color="#fff" />
-                : <Text style={styles.submitText}>Guardar</Text>
+                : <Text style={styles.submitText}>{t('common.save')}</Text>
               }
             </Pressable>
           </View>
@@ -184,7 +186,7 @@ export function EditCategoryModal({ category, onClose }: Props) {
       </KeyboardAvoidingView>
       <SelectCategoryModal
         visible={showRedirect}
-        title="Redirecionar transações"
+        title={t('modalCategory.redirectTitle')}
         categories={redirectCategories}
         selectedId={redirectCategoryId}
         onSelect={(id) => { setRedirectCategoryId(id); setShowRedirect(false); setShowConfirm(true); }}
@@ -192,11 +194,9 @@ export function EditCategoryModal({ category, onClose }: Props) {
       />
       <ConfirmModal
         visible={showConfirm}
-        title="Apagar categoria"
-        message={redirectCategoryId
-          ? 'As transações serão movidas para a categoria selecionada. Esta ação é irreversível.'
-          : 'Esta ação é irreversível.'}
-        confirmLabel="Apagar"
+        title={t('modalCategory.deleteTitle')}
+        message={redirectCategoryId ? t('modalCategory.deleteMsgRedirect') : t('modalCategory.deleteMsg')}
+        confirmLabel={t('common.delete')}
         onConfirm={handleConfirmDelete}
         onCancel={() => setShowConfirm(false)}
       />

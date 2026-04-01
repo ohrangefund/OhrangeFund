@@ -4,6 +4,7 @@ import {
   Pressable, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { X, CalendarDays, ChevronRight } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useAccounts } from '@/hooks/useAccounts';
 import { updateTransfer, deleteTransfer } from '@/api/transfers';
@@ -20,6 +21,7 @@ interface Props {
 
 export function EditTransferModal({ transfer, onClose }: Props) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { accounts } = useAccounts();
 
   const [amount, setAmount] = useState('');
@@ -45,7 +47,7 @@ export function EditTransferModal({ transfer, onClose }: Props) {
   async function handleSave() {
     if (!transfer) return;
     const cents = amountToCents(parseFloat(amount.replace(',', '.')));
-    if (isNaN(cents) || cents <= 0) { setError('Valor inválido.'); return; }
+    if (isNaN(cents) || cents <= 0) { setError(t('common.invalidAmount')); return; }
 
     setError('');
     setLoading(true);
@@ -57,7 +59,7 @@ export function EditTransferModal({ transfer, onClose }: Props) {
       );
       onClose();
     } catch {
-      setError('Erro ao guardar. Tenta novamente.');
+      setError(t('common.errorSave'));
     } finally {
       setLoading(false);
     }
@@ -70,7 +72,7 @@ export function EditTransferModal({ transfer, onClose }: Props) {
       await deleteTransfer(transfer.id, transfer.from_account_id, transfer.to_account_id, transfer.amount);
       onClose();
     } catch {
-      setError('Erro ao apagar. Tenta novamente.');
+      setError(t('common.errorDelete'));
       setShowConfirm(false);
     } finally {
       setLoading(false);
@@ -82,7 +84,7 @@ export function EditTransferModal({ transfer, onClose }: Props) {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <View style={[styles.container, { backgroundColor: colors.background }]}>
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.title, { color: colors.text }]}>Editar transferência</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{t('modalTransfer.editTitle')}</Text>
             <Pressable onPress={onClose} hitSlop={8}>
               <X size={22} color={colors.textSecondary} />
             </Pressable>
@@ -109,7 +111,7 @@ export function EditTransferModal({ transfer, onClose }: Props) {
             </View>
 
             {/* Valor */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Valor (€)</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.amount')}</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
               placeholder="0,00"
@@ -120,7 +122,7 @@ export function EditTransferModal({ transfer, onClose }: Props) {
             />
 
             {/* Data */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Data</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.date')}</Text>
             <Pressable
               onPress={() => setShowDatePicker(true)}
               style={({ pressed }) => [styles.selector, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.8 : 1 }]}
@@ -133,10 +135,10 @@ export function EditTransferModal({ transfer, onClose }: Props) {
             </Pressable>
 
             {/* Descrição */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Descrição (opcional)</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.description')}</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-              placeholder="Ex: Pagamento de renda"
+              placeholder={t('modalTransfer.descPlaceholder')}
               placeholderTextColor={colors.textDisabled}
               value={description}
               onChangeText={setDescription}
@@ -146,7 +148,7 @@ export function EditTransferModal({ transfer, onClose }: Props) {
 
           <View style={[styles.dangerSection, { borderTopColor: colors.border }]}>
             <Pressable onPress={() => setShowConfirm(true)} style={styles.dangerBtn}>
-              <Text style={[styles.dangerText, { color: colors.error }]}>Apagar transferência</Text>
+              <Text style={[styles.dangerText, { color: colors.error }]}>{t('modalTransfer.deleteBtn')}</Text>
             </Pressable>
           </View>
 
@@ -158,7 +160,7 @@ export function EditTransferModal({ transfer, onClose }: Props) {
             >
               {loading
                 ? <ActivityIndicator color="#fff" />
-                : <Text style={styles.submitText}>Guardar</Text>
+                : <Text style={styles.submitText}>{t('common.save')}</Text>
               }
             </Pressable>
           </View>
@@ -173,9 +175,9 @@ export function EditTransferModal({ transfer, onClose }: Props) {
       />
       <ConfirmModal
         visible={showConfirm}
-        title="Apagar transferência"
-        message="Os saldos das duas contas serão revertidos. Esta ação é irreversível."
-        confirmLabel="Apagar"
+        title={t('modalTransfer.deleteTitle')}
+        message={t('modalTransfer.deleteMsg')}
+        confirmLabel={t('common.delete')}
         onConfirm={handleDelete}
         onCancel={() => setShowConfirm(false)}
       />

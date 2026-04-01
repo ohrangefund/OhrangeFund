@@ -3,8 +3,9 @@ import {
   View, Text, Pressable, StyleSheet, ActivityIndicator,
   Modal, TextInput, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import { ChevronRight, Palette, LogOut, Trash2 } from 'lucide-react-native';
+import { ChevronRight, Palette, LogOut, Trash2, Globe } from 'lucide-react-native';
 import { reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { auth } from '@/api/firebase';
@@ -14,21 +15,22 @@ import type { SettingsStackParamList } from '@/types/navigation';
 
 type Props = NativeStackScreenProps<SettingsStackParamList, 'SettingsMain'>;
 
-function getReauthError(code: string): string {
-  switch (code) {
-    case 'auth/invalid-credential':
-    case 'auth/wrong-password':
-      return 'Credenciais incorretas.';
-    case 'auth/too-many-requests':
-      return 'Demasiadas tentativas. Tenta mais tarde.';
-    default:
-      return 'Erro ao verificar identidade. Tenta novamente.';
-  }
-}
-
 export function SettingsScreen({ navigation }: Props) {
   const { colors } = useTheme();
   const { signOut, user } = useAuth();
+  const { t } = useTranslation();
+
+  function getReauthError(code: string): string {
+    switch (code) {
+      case 'auth/invalid-credential':
+      case 'auth/wrong-password':
+        return t('settings.reauthErrors.invalidCredential');
+      case 'auth/too-many-requests':
+        return t('settings.reauthErrors.tooManyRequests');
+      default:
+        return t('settings.reauthErrors.default');
+    }
+  }
   const [showDelete, setShowDelete] = useState(false);
   const [deleteEmail, setDeleteEmail] = useState('');
   const [deletePassword, setDeletePassword] = useState('');
@@ -67,7 +69,7 @@ export function SettingsScreen({ navigation }: Props) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>GERAL</Text>
+      <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{t('settings.general')}</Text>
       <View style={[styles.group, { backgroundColor: colors.surface }]}>
         <Pressable
           onPress={() => navigation.navigate('Visuals')}
@@ -76,12 +78,23 @@ export function SettingsScreen({ navigation }: Props) {
           <View style={[styles.iconWrap, { backgroundColor: colors.primary + '22' }]}>
             <Palette size={18} color={colors.primary} />
           </View>
-          <Text style={[styles.rowText, { color: colors.text }]}>Visuais</Text>
+          <Text style={[styles.rowText, { color: colors.text }]}>{t('settings.visuals')}</Text>
+          <ChevronRight size={18} color={colors.textSecondary} />
+        </Pressable>
+        <View style={[styles.separator, { backgroundColor: colors.border }]} />
+        <Pressable
+          onPress={() => navigation.navigate('Language')}
+          style={({ pressed }) => [styles.row, { opacity: pressed ? 0.7 : 1 }]}
+        >
+          <View style={[styles.iconWrap, { backgroundColor: colors.primary + '22' }]}>
+            <Globe size={18} color={colors.primary} />
+          </View>
+          <Text style={[styles.rowText, { color: colors.text }]}>{t('settings.language')}</Text>
           <ChevronRight size={18} color={colors.textSecondary} />
         </Pressable>
       </View>
 
-      <Text style={[styles.sectionLabel, { color: colors.textSecondary, marginTop: 24 }]}>CONTA</Text>
+      <Text style={[styles.sectionLabel, { color: colors.textSecondary, marginTop: 24 }]}>{t('settings.account')}</Text>
       <View style={[styles.group, { backgroundColor: colors.surface }]}>
         <Pressable
           onPress={signOut}
@@ -90,7 +103,7 @@ export function SettingsScreen({ navigation }: Props) {
           <View style={[styles.iconWrap, { backgroundColor: colors.error + '22' }]}>
             <LogOut size={18} color={colors.error} />
           </View>
-          <Text style={[styles.rowText, { color: colors.error }]}>Terminar sessão</Text>
+          <Text style={[styles.rowText, { color: colors.error }]}>{t('settings.signOut')}</Text>
         </Pressable>
         <View style={[styles.separator, { backgroundColor: colors.border }]} />
         <Pressable
@@ -100,7 +113,7 @@ export function SettingsScreen({ navigation }: Props) {
           <View style={[styles.iconWrap, { backgroundColor: colors.error + '22' }]}>
             <Trash2 size={18} color={colors.error} />
           </View>
-          <Text style={[styles.rowText, { color: colors.error }]}>Apagar conta</Text>
+          <Text style={[styles.rowText, { color: colors.error }]}>{t('settings.deleteAccount')}</Text>
         </Pressable>
       </View>
 
@@ -111,13 +124,12 @@ export function SettingsScreen({ navigation }: Props) {
         >
           <Pressable style={StyleSheet.absoluteFill} onPress={closeDeleteModal} />
           <View style={[styles.card, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Apagar conta</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>{t('settings.deleteAccountTitle')}</Text>
             <Text style={[styles.modalMessage, { color: colors.textSecondary }]}>
-              Esta operação é irreversível. Todos os dados (contas, transações, transferências,
-              categorias e agendamentos) serão permanentemente eliminados.
+              {t('settings.deleteAccountMessage')}
             </Text>
             <Text style={[styles.modalMessage, { color: colors.textSecondary, marginTop: 4 }]}>
-              Confirma a tua identidade para continuar:
+              {t('settings.confirmIdentity')}
             </Text>
 
             <TextInput
@@ -151,7 +163,7 @@ export function SettingsScreen({ navigation }: Props) {
                 disabled={deleting}
                 style={({ pressed }) => [styles.btn, { opacity: pressed || deleting ? 0.5 : 1 }]}
               >
-                <Text style={[styles.cancelText, { color: colors.textSecondary }]}>Cancelar</Text>
+                <Text style={[styles.cancelText, { color: colors.textSecondary }]}>{t('common.cancel')}</Text>
               </Pressable>
               <View style={[styles.actionSep, { backgroundColor: colors.border }]} />
               <Pressable
@@ -161,7 +173,7 @@ export function SettingsScreen({ navigation }: Props) {
               >
                 {deleting
                   ? <ActivityIndicator size="small" color={colors.error} />
-                  : <Text style={[styles.confirmText, { color: colors.error }]}>Apagar tudo</Text>}
+                  : <Text style={[styles.confirmText, { color: colors.error }]}>{t('settings.deleteAll')}</Text>}
               </Pressable>
             </View>
           </View>

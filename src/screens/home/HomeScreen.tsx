@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { Plus, ChevronDown } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useAccounts } from '@/hooks/useAccounts';
 import { Layers } from 'lucide-react-native';
@@ -18,6 +19,7 @@ const SELECTED_ACCOUNT_KEY = 'selectedAccountId';
 
 export function HomeScreen() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { accounts, totalBalance, loading: accountsLoading } = useAccounts();
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'expense' | 'income'>('expense');
@@ -37,12 +39,12 @@ export function HomeScreen() {
     });
   }, []);
 
-  // null = Geral (all accounts); string = specific account
   const isTotal = selectedAccountId === null;
   const selectedAccount: Account | null = isTotal
     ? null
     : accounts.find((a) => a.id === selectedAccountId) ?? null;
   const displayBalance = isTotal ? totalBalance : (selectedAccount?.balance ?? 0);
+
   function handleSelectAccount(account: Account) {
     setSelectedAccountId(account.id);
     AsyncStorage.setItem(SELECTED_ACCOUNT_KEY, account.id);
@@ -86,7 +88,7 @@ export function HomeScreen() {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
         <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-          Sem contas. Cria uma na tab Contas!
+          {t('home.noAccounts')}
         </Text>
       </View>
     );
@@ -94,7 +96,6 @@ export function HomeScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Account selector */}
       <Pressable
         onPress={() => setShowAccountPicker(true)}
         style={({ pressed }) => [styles.accountSelector, { backgroundColor: colors.surface, opacity: pressed ? 0.8 : 1 }]}
@@ -104,16 +105,15 @@ export function HomeScreen() {
           : <View style={[styles.accountDot, { backgroundColor: selectedAccount?.color ?? colors.primary }]} />
         }
         <Text style={[styles.accountName, { color: colors.text }]} numberOfLines={1}>
-          {isTotal ? 'Geral' : (selectedAccount?.name ?? '—')}
+          {isTotal ? t('home.general') : (selectedAccount?.name ?? '—')}
         </Text>
         <ChevronDown size={16} color={colors.textSecondary} />
       </Pressable>
 
-      {/* Cards row */}
       <View style={styles.cardsRow}>
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <Text style={[styles.cardLabel, { color: colors.textSecondary }]}>
-            {isTotal ? 'Saldo total' : 'Saldo atual'}
+            {isTotal ? t('home.totalBalance') : t('home.currentBalance')}
           </Text>
           <Text style={[styles.cardValue, { color: colors.text }]}>
             {formatCurrency(displayBalance)}
@@ -121,7 +121,7 @@ export function HomeScreen() {
         </View>
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <Text style={[styles.cardLabel, { color: colors.textSecondary }]}>
-            {activeTab === 'expense' ? 'Total despesas' : 'Total receitas'}
+            {activeTab === 'expense' ? t('home.totalExpenses') : t('home.totalIncome')}
           </Text>
           <Text style={[styles.cardValue, { color: activeTab === 'expense' ? colors.expense : colors.income }]}>
             {formatCurrency(displayAmount)}
@@ -129,7 +129,6 @@ export function HomeScreen() {
         </View>
       </View>
 
-      {/* Tabs */}
       <View style={[styles.tabs, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         {(['expense', 'income'] as const).map((tab) => (
           <Pressable
@@ -138,13 +137,12 @@ export function HomeScreen() {
             style={[styles.tab, activeTab === tab && [styles.tabActive, { borderBottomColor: colors.primary }]]}
           >
             <Text style={[styles.tabText, { color: activeTab === tab ? colors.primary : colors.textSecondary }]}>
-              {tab === 'expense' ? 'Despesas' : 'Receitas'}
+              {tab === 'expense' ? t('home.expenses') : t('home.income')}
             </Text>
           </Pressable>
         ))}
       </View>
 
-      {/* Transaction list */}
       {txLoading ? (
         <View style={styles.center}>
           <ActivityIndicator color={colors.primary} />
@@ -165,21 +163,20 @@ export function HomeScreen() {
           ListEmptyComponent={
             <View style={styles.empty}>
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                {activeTab === 'expense' ? 'Sem despesas.' : 'Sem receitas.'}
+                {activeTab === 'expense' ? t('home.noExpenses') : t('home.noIncome')}
               </Text>
             </View>
           }
           ListFooterComponent={
             hasMore ? (
               <Pressable onPress={loadMore} style={styles.loadMore}>
-                <Text style={[styles.loadMoreText, { color: colors.primary }]}>Carregar mais</Text>
+                <Text style={[styles.loadMoreText, { color: colors.primary }]}>{t('home.loadMore')}</Text>
               </Pressable>
             ) : null
           }
         />
       )}
 
-      {/* FAB */}
       <Pressable
         onPress={() => setShowAdd(true)}
         style={({ pressed }) => [styles.fab, { backgroundColor: colors.primary, opacity: pressed ? 0.85 : 1 }]}
@@ -225,19 +222,12 @@ const styles = StyleSheet.create({
   },
   accountDot: { width: 10, height: 10, borderRadius: 5 },
   accountName: { flex: 1, fontSize: 16, fontWeight: '600' },
-  cardsRow: {
-    flexDirection: 'row', marginHorizontal: 16, marginBottom: 16, gap: 10,
-  },
-  card: {
-    flex: 1, borderRadius: 16, padding: 16, alignItems: 'center',
-  },
+  cardsRow: { flexDirection: 'row', marginHorizontal: 16, marginBottom: 16, gap: 10 },
+  card: { flex: 1, borderRadius: 16, padding: 16, alignItems: 'center' },
   cardLabel: { fontSize: 12, fontWeight: '500', marginBottom: 4 },
   cardValue: { fontSize: 22, fontWeight: '700' },
   tabs: { flexDirection: 'row', borderBottomWidth: 1, marginBottom: 4 },
-  tab: {
-    flex: 1, paddingVertical: 14, alignItems: 'center',
-    borderBottomWidth: 2, borderBottomColor: 'transparent',
-  },
+  tab: { flex: 1, paddingVertical: 14, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
   tabActive: {},
   tabText: { fontSize: 15, fontWeight: '600' },
   list: { padding: 16, paddingBottom: 100 },

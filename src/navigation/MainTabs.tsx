@@ -1,6 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useEffect, useMemo } from 'react';
-import { View } from 'react-native';
+import { View, Text } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { DrawerProvider, useDrawer } from '@/context/DrawerContext';
 import { HomeStack } from '@/navigation/stacks/HomeStack';
@@ -17,7 +18,16 @@ const Tab = createBottomTabNavigator<MainTabsParamList>();
 
 function Placeholder() {
   const { colors } = useTheme();
-  return <View style={{ flex: 1, backgroundColor: colors.background }} />;
+  const { t } = useTranslation();
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', padding: 32 }}>
+      <Text style={{ fontSize: 40, marginBottom: 16 }}>📊</Text>
+      <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 8 }}>{t('analytics.title')}</Text>
+      <Text style={{ fontSize: 14, color: colors.textSecondary, textAlign: 'center', lineHeight: 20 }}>
+        {t('analytics.comingSoon')}
+      </Text>
+    </View>
+  );
 }
 
 function NavBridge({ navigation }: BottomTabBarProps) {

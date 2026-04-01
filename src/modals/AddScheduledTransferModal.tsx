@@ -4,6 +4,7 @@ import {
   Pressable, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { X, ChevronRight, CalendarDays } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { createScheduledTransfer } from '@/api/scheduledTransfers';
@@ -13,12 +14,7 @@ import { amountToCents } from '@/utils/currency';
 import { formatDate } from '@/utils/date';
 import type { Account, Recurrence } from '@/types/models';
 
-const RECURRENCES: { value: Recurrence; label: string }[] = [
-  { value: 'once', label: 'Uma vez' },
-  { value: 'weekly', label: 'Semanal' },
-  { value: 'monthly', label: 'Mensal' },
-  { value: 'yearly', label: 'Anual' },
-];
+const RECURRENCES: Recurrence[] = ['once', 'weekly', 'monthly', 'yearly'];
 
 interface Props {
   visible: boolean;
@@ -29,6 +25,7 @@ interface Props {
 export function AddScheduledTransferModal({ visible, accounts, onClose }: Props) {
   const { colors } = useTheme();
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   const [amount, setAmount] = useState('');
   const [fromAccount, setFromAccount] = useState<Account | null>(null);
@@ -57,9 +54,9 @@ export function AddScheduledTransferModal({ visible, accounts, onClose }: Props)
 
   async function handleSubmit() {
     const cents = amountToCents(parseFloat(amount.replace(',', '.')));
-    if (isNaN(cents) || cents <= 0) { setError('Valor inválido.'); return; }
-    if (!fromAccount) { setError('Seleciona a conta de origem.'); return; }
-    if (!toAccount) { setError('Seleciona a conta de destino.'); return; }
+    if (isNaN(cents) || cents <= 0) { setError(t('common.invalidAmount')); return; }
+    if (!fromAccount) { setError(t('modalTransfer.selectFrom')); return; }
+    if (!toAccount) { setError(t('modalTransfer.selectTo')); return; }
 
     setError('');
     setLoading(true);
@@ -75,7 +72,7 @@ export function AddScheduledTransferModal({ visible, accounts, onClose }: Props)
       });
       handleClose();
     } catch {
-      setError('Erro ao criar agendamento. Tenta novamente.');
+      setError(t('modalScheduledTransfer.errorCreate'));
     } finally {
       setLoading(false);
     }
@@ -86,7 +83,7 @@ export function AddScheduledTransferModal({ visible, accounts, onClose }: Props)
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <View style={[styles.container, { backgroundColor: colors.background }]}>
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.title, { color: colors.text }]}>Transferência agendada</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{t('modalScheduledTransfer.addTitle')}</Text>
             <Pressable onPress={handleClose} hitSlop={8}>
               <X size={22} color={colors.textSecondary} />
             </Pressable>
@@ -96,7 +93,7 @@ export function AddScheduledTransferModal({ visible, accounts, onClose }: Props)
             {error ? <Text style={[styles.error, { color: colors.error }]}>{error}</Text> : null}
 
             {/* De */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>De</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.from')}</Text>
             <Pressable
               onPress={() => setShowFromPicker(true)}
               style={({ pressed }) => [styles.selector, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.8 : 1 }]}
@@ -107,13 +104,13 @@ export function AddScheduledTransferModal({ visible, accounts, onClose }: Props)
                   <Text style={[styles.selectorText, { color: colors.text }]}>{fromAccount.name}</Text>
                 </View>
               ) : (
-                <Text style={[styles.selectorText, { color: colors.textDisabled }]}>Selecionar conta</Text>
+                <Text style={[styles.selectorText, { color: colors.textDisabled }]}>{t('common.selectAccount')}</Text>
               )}
               <ChevronRight size={16} color={colors.textSecondary} />
             </Pressable>
 
             {/* Para */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Para</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.to')}</Text>
             <Pressable
               onPress={() => setShowToPicker(true)}
               style={({ pressed }) => [styles.selector, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.8 : 1 }]}
@@ -124,13 +121,13 @@ export function AddScheduledTransferModal({ visible, accounts, onClose }: Props)
                   <Text style={[styles.selectorText, { color: colors.text }]}>{toAccount.name}</Text>
                 </View>
               ) : (
-                <Text style={[styles.selectorText, { color: colors.textDisabled }]}>Selecionar conta</Text>
+                <Text style={[styles.selectorText, { color: colors.textDisabled }]}>{t('common.selectAccount')}</Text>
               )}
               <ChevronRight size={16} color={colors.textSecondary} />
             </Pressable>
 
             {/* Valor */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Valor (€)</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.amount')}</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
               placeholder="0,00"
@@ -141,23 +138,23 @@ export function AddScheduledTransferModal({ visible, accounts, onClose }: Props)
             />
 
             {/* Recorrência */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Recorrência</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('modalScheduledTransfer.recurrence')}</Text>
             <View style={styles.recurrenceRow}>
-              {RECURRENCES.map(({ value, label }) => (
+              {RECURRENCES.map((value) => (
                 <Pressable
                   key={value}
                   onPress={() => setRecurrence(value)}
                   style={[styles.recurrenceBtn, { backgroundColor: recurrence === value ? colors.primary : colors.surface, borderColor: recurrence === value ? colors.primary : colors.border }]}
                 >
                   <Text style={{ color: recurrence === value ? '#fff' : colors.textSecondary, fontSize: 13, fontWeight: '600' }}>
-                    {label}
+                    {t(`modalScheduledTransfer.${value}` as any)}
                   </Text>
                 </Pressable>
               ))}
             </View>
 
             {/* Próxima data */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Primeira execução</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('modalScheduledTransfer.startDate')}</Text>
             <Pressable
               onPress={() => setShowNextDatePicker(true)}
               style={({ pressed }) => [styles.selector, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.8 : 1 }]}
@@ -170,14 +167,14 @@ export function AddScheduledTransferModal({ visible, accounts, onClose }: Props)
             {/* Data de fim */}
             {recurrence !== 'once' && (
               <>
-                <Text style={[styles.label, { color: colors.textSecondary }]}>Data de fim (opcional)</Text>
+                <Text style={[styles.label, { color: colors.textSecondary }]}>{t('modalScheduledTransfer.endDate')}</Text>
                 <Pressable
                   onPress={() => setShowEndDatePicker(true)}
                   style={({ pressed }) => [styles.selector, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.8 : 1 }]}
                 >
                   <CalendarDays size={16} color={colors.textSecondary} style={{ marginRight: 10 }} />
                   <Text style={[styles.selectorText, { color: endDate ? colors.text : colors.textDisabled }]}>
-                    {endDate ? formatDate(endDate) : 'Sem data de fim'}
+                    {endDate ? formatDate(endDate) : t('common.noEndDate')}
                   </Text>
                   {endDate && (
                     <Pressable onPress={() => setEndDate(null)} hitSlop={8}>
@@ -190,10 +187,10 @@ export function AddScheduledTransferModal({ visible, accounts, onClose }: Props)
             )}
 
             {/* Descrição */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Descrição (opcional)</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.description')}</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-              placeholder="Ex: Poupança mensal"
+              placeholder={t('modalScheduledTransfer.descPlaceholder')}
               placeholderTextColor={colors.textDisabled}
               value={description}
               onChangeText={setDescription}
@@ -209,7 +206,7 @@ export function AddScheduledTransferModal({ visible, accounts, onClose }: Props)
             >
               {loading
                 ? <ActivityIndicator color="#fff" />
-                : <Text style={styles.submitText}>Criar agendamento</Text>
+                : <Text style={styles.submitText}>{t('modalScheduledTransfer.createBtn')}</Text>
               }
             </Pressable>
           </View>

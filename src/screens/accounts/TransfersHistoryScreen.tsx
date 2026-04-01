@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useAllTransfers } from '@/hooks/useTransfers';
@@ -9,6 +10,7 @@ import type { Transfer } from '@/types/models';
 
 export function TransfersHistoryScreen() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { accounts } = useAccounts();
   const { transfers, loading, hasMore, loadMore } = useAllTransfers();
   const [editTransfer, setEditTransfer] = useState<Transfer | null>(null);
@@ -28,32 +30,24 @@ export function TransfersHistoryScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
-          <TransferItem
-            transfer={item}
-            accounts={accounts}
-            onPress={() => setEditTransfer(item)}
-          />
+          <TransferItem transfer={item} accounts={accounts} onPress={() => setEditTransfer(item)} />
         )}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              Sem transferências.
+              {t('transfersHistory.noTransfers')}
             </Text>
           </View>
         }
         ListFooterComponent={
           hasMore ? (
             <Pressable onPress={loadMore} style={styles.loadMore}>
-              <Text style={[styles.loadMoreText, { color: colors.primary }]}>Carregar mais</Text>
+              <Text style={[styles.loadMoreText, { color: colors.primary }]}>{t('transfersHistory.loadMore')}</Text>
             </Pressable>
           ) : null
         }
       />
-
-      <EditTransferModal
-        transfer={editTransfer}
-        onClose={() => setEditTransfer(null)}
-      />
+      <EditTransferModal transfer={editTransfer} onClose={() => setEditTransfer(null)} />
     </View>
   );
 }

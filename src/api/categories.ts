@@ -73,22 +73,34 @@ export async function deleteCategoryWithRedirect(userId: string, categoryId: str
   await batch.commit();
 }
 
-const CATEGORY_TEMPLATES = [
-  { name: 'Salário',       type: 'income',  color: CATEGORY_COLORS[2], icon: 'briefcase'   },
-  { name: 'Freelance',     type: 'income',  color: CATEGORY_COLORS[7], icon: 'trending-up' },
-  { name: 'Investimentos', type: 'income',  color: CATEGORY_COLORS[1], icon: 'piggy-bank'  },
-  { name: 'Alimentação',   type: 'expense', color: CATEGORY_COLORS[0], icon: 'utensils'    },
-  { name: 'Transportes',   type: 'expense', color: CATEGORY_COLORS[4], icon: 'car'         },
-  { name: 'Casa',          type: 'expense', color: CATEGORY_COLORS[6], icon: 'home'        },
-  { name: 'Saúde',         type: 'expense', color: CATEGORY_COLORS[3], icon: 'heart-pulse' },
-  { name: 'Lazer',         type: 'expense', color: CATEGORY_COLORS[5], icon: 'coffee'      },
-] as const;
+const CATEGORY_TEMPLATES: Record<'en' | 'pt', { name: string; type: string; color: string; icon: string }[]> = {
+  en: [
+    { name: 'Salary',       type: 'income',  color: CATEGORY_COLORS[2], icon: 'briefcase'   },
+    { name: 'Freelance',    type: 'income',  color: CATEGORY_COLORS[7], icon: 'trending-up' },
+    { name: 'Investments',  type: 'income',  color: CATEGORY_COLORS[1], icon: 'piggy-bank'  },
+    { name: 'Food',         type: 'expense', color: CATEGORY_COLORS[0], icon: 'utensils'    },
+    { name: 'Transport',    type: 'expense', color: CATEGORY_COLORS[4], icon: 'car'         },
+    { name: 'Home',         type: 'expense', color: CATEGORY_COLORS[6], icon: 'home'        },
+    { name: 'Health',       type: 'expense', color: CATEGORY_COLORS[3], icon: 'heart-pulse' },
+    { name: 'Leisure',      type: 'expense', color: CATEGORY_COLORS[5], icon: 'coffee'      },
+  ],
+  pt: [
+    { name: 'Salário',       type: 'income',  color: CATEGORY_COLORS[2], icon: 'briefcase'   },
+    { name: 'Freelance',     type: 'income',  color: CATEGORY_COLORS[7], icon: 'trending-up' },
+    { name: 'Investimentos', type: 'income',  color: CATEGORY_COLORS[1], icon: 'piggy-bank'  },
+    { name: 'Alimentação',   type: 'expense', color: CATEGORY_COLORS[0], icon: 'utensils'    },
+    { name: 'Transportes',   type: 'expense', color: CATEGORY_COLORS[4], icon: 'car'         },
+    { name: 'Casa',          type: 'expense', color: CATEGORY_COLORS[6], icon: 'home'        },
+    { name: 'Saúde',         type: 'expense', color: CATEGORY_COLORS[3], icon: 'heart-pulse' },
+    { name: 'Lazer',         type: 'expense', color: CATEGORY_COLORS[5], icon: 'coffee'      },
+  ],
+};
 
-export async function seedCategoryTemplates(userId: string): Promise<void> {
+export async function seedCategoryTemplates(userId: string, lang: 'en' | 'pt' = 'en'): Promise<void> {
   const batch = writeBatch(db);
   const col = collection(db, 'categories');
 
-  for (const t of CATEGORY_TEMPLATES) {
+  for (const t of CATEGORY_TEMPLATES[lang]) {
     batch.set(doc(col), {
       user_id: userId,
       name: t.name,
@@ -104,14 +116,15 @@ export async function seedCategoryTemplates(userId: string): Promise<void> {
   await batch.commit();
 }
 
-export async function createDefaultCategories(userId: string): Promise<void> {
+export async function createDefaultCategories(userId: string, lang: 'en' | 'pt' = 'en'): Promise<void> {
   const batch = writeBatch(db);
   const col = collection(db, 'categories');
 
+  const othersName = lang === 'pt' ? 'Outros' : 'Others';
   const defaults = [
-    { name: 'Outros', type: 'income',  color: CATEGORY_COLORS[2], icon: 'trending-up'   },
-    { name: 'Outros', type: 'expense', color: CATEGORY_COLORS[3], icon: 'trending-down' },
-  ] as const;
+    { name: othersName, type: 'income',  color: CATEGORY_COLORS[2], icon: 'trending-up'   },
+    { name: othersName, type: 'expense', color: CATEGORY_COLORS[3], icon: 'trending-down' },
+  ];
 
   for (const d of defaults) {
     batch.set(doc(col), {
@@ -127,5 +140,5 @@ export async function createDefaultCategories(userId: string): Promise<void> {
   }
 
   await batch.commit();
-  await seedCategoryTemplates(userId);
+  await seedCategoryTemplates(userId, lang);
 }
