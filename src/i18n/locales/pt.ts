@@ -43,6 +43,10 @@ export default {
     noIncome: 'Sem receitas.',
     noAccounts: 'Sem contas. Cria uma na tab Contas!',
     loadMore: 'Carregar mais',
+    periodDay: 'Dia',
+    periodWeek: 'Semana',
+    periodMonth: 'Mês',
+    periodYear: 'Ano',
   },
   accounts: {
     totalBalance: 'Saldo total',
@@ -217,12 +221,18 @@ export default {
   },
   analytics: {
     title: 'Gráficos',
-    comingSoon: 'A ser adicionado em breve.',
+    balanceHistory: 'Evolução do Saldo',
+    incomeVsExpense: 'Receita vs Despesa',
+    allAccounts: 'Todas as contas',
+    noData: 'Sem dados para este período.',
+    period6m: '6 Meses',
+    period1y: '1 Ano',
   },
   nav: {
     scheduled: 'Agendamentos',
     transfers: 'Transferências',
     visuals: 'Visuais',
     language: 'Idioma',
+    analytics: 'Gráficos',
   },
 } as const;

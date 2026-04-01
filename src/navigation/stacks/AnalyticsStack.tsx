@@ -1,12 +1,12 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
-import { ScheduledScreen } from '@/screens/scheduled/ScheduledScreen';
-import type { ScheduledStackParamList } from '@/types/navigation';
+import { AnalyticsScreen } from '@/screens/analytics/AnalyticsScreen';
+import type { AnalyticsStackParamList } from '@/types/navigation';
 
-const Stack = createNativeStackNavigator<ScheduledStackParamList>();
+const Stack = createNativeStackNavigator<AnalyticsStackParamList>();
 
-export function ScheduledStack() {
+export function AnalyticsStack() {
   const { colors } = useTheme();
   const { t } = useTranslation();
 
@@ -20,9 +20,9 @@ export function ScheduledStack() {
       }}
     >
       <Stack.Screen
-        name="ScheduledMain"
-        component={ScheduledScreen}
-        options={{ title: t('nav.scheduled') }}
+        name="AnalyticsMain"
+        component={AnalyticsScreen}
+        options={{ title: t('nav.analytics') }}
       />
     </Stack.Navigator>
   );

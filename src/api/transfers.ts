@@ -5,6 +5,22 @@ import {
 import { db } from '@/api/firebase';
 import type { Transfer } from '@/types/models';
 
+export function subscribeToTransfersForAnalytics(
+  userId: string,
+  since: Date,
+  callback: (transfers: Transfer[]) => void,
+): () => void {
+  const q = query(
+    collection(db, 'transfers'),
+    where('user_id', '==', userId),
+    where('date', '>=', Timestamp.fromDate(since)),
+    orderBy('date', 'asc'),
+  );
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Transfer)));
+  });
+}
+
 export function subscribeToTransfers(
   userId: string,
   accountId: string,

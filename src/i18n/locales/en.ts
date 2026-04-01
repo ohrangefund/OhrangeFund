@@ -43,6 +43,10 @@ export default {
     noIncome: 'No income.',
     noAccounts: 'No accounts. Create one in the Accounts tab!',
     loadMore: 'Load more',
+    periodDay: 'Day',
+    periodWeek: 'Week',
+    periodMonth: 'Month',
+    periodYear: 'Year',
   },
   accounts: {
     totalBalance: 'Total balance',
@@ -217,12 +221,18 @@ export default {
   },
   analytics: {
     title: 'Analytics',
-    comingSoon: 'Coming soon.',
+    balanceHistory: 'Balance History',
+    incomeVsExpense: 'Income vs Expense',
+    allAccounts: 'All accounts',
+    noData: 'No data for this period.',
+    period6m: '6 Months',
+    period1y: '1 Year',
   },
   nav: {
     scheduled: 'Scheduled',
     transfers: 'Transfers',
     visuals: 'Visuals',
     language: 'Language',
+    analytics: 'Analytics',
   },
 } as const;

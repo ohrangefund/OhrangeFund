@@ -35,6 +35,10 @@ export type SettingsStackParamList = {
   Language: undefined;
 };
 
+export type AnalyticsStackParamList = {
+  AnalyticsMain: undefined;
+};
+
 export type AuthScreenProps<T extends keyof AuthStackParamList> =
   NativeStackScreenProps<AuthStackParamList, T>;
 

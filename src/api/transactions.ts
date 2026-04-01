@@ -5,15 +5,35 @@ import {
 import { db } from '@/api/firebase';
 import type { Transaction } from '@/types/models';
 
+export function subscribeToTransactionsForAnalytics(
+  userId: string,
+  since: Date,
+  callback: (transactions: Transaction[]) => void,
+): () => void {
+  const q = query(
+    collection(db, 'transactions'),
+    where('user_id', '==', userId),
+    where('date', '>=', Timestamp.fromDate(since)),
+    orderBy('date', 'asc'),
+  );
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Transaction)));
+  });
+}
+
 export function subscribeToTransactions(
   userId: string,
   accountId: string | null,
   limitCount: number,
   callback: (transactions: Transaction[], hasMore: boolean) => void,
+  startDate?: Date,
+  endDate?: Date,
 ): () => void {
   const constraints = [
     where('user_id', '==', userId),
     ...(accountId !== null ? [where('account_id', '==', accountId)] : []),
+    ...(startDate ? [where('date', '>=', Timestamp.fromDate(startDate))] : []),
+    ...(endDate ? [where('date', '<=', Timestamp.fromDate(endDate))] : []),
     orderBy('date', 'desc'),
     firestoreLimit(limitCount + 1),
   ] as const;
