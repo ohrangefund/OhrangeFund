@@ -31,7 +31,7 @@ const ICONS: Record<string, React.FC<{ size: number; color: string }>> = {
 
 interface Props {
   visible: boolean;
-  account: Account;
+  account: Account | null;
   accounts: Account[];
   onClose: () => void;
 }
@@ -46,7 +46,7 @@ export function AddTransactionModal({ visible, account, accounts, onClose }: Pro
   const [categoryId, setCategoryId] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
   const [description, setDescription] = useState('');
-  const [selectedAccount, setSelectedAccount] = useState<Account>(account);
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(account);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [showAccountPicker, setShowAccountPicker] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -67,6 +67,7 @@ export function AddTransactionModal({ visible, account, accounts, onClose }: Pro
   async function handleSubmit() {
     const cents = amountToCents(parseFloat(amount.replace(',', '.')));
     if (isNaN(cents) || cents <= 0) { setError('Valor inválido.'); return; }
+    if (!selectedAccount) { setError('Seleciona uma conta.'); return; }
     if (!categoryId) { setError('Seleciona uma categoria.'); return; }
 
     setError('');
@@ -129,12 +130,16 @@ export function AddTransactionModal({ visible, account, accounts, onClose }: Pro
               onPress={() => setShowAccountPicker(true)}
               style={[styles.selector, { backgroundColor: colors.surface, borderColor: colors.border }]}
             >
-              <View style={styles.selectorContent}>
-                <View style={[styles.selectorIcon, { backgroundColor: selectedAccount.color + '22' }]}>
-                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: selectedAccount.color }} />
+              {selectedAccount ? (
+                <View style={styles.selectorContent}>
+                  <View style={[styles.selectorIcon, { backgroundColor: selectedAccount.color + '22' }]}>
+                    <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: selectedAccount.color }} />
+                  </View>
+                  <Text style={[styles.selectorText, { color: colors.text }]}>{selectedAccount.name}</Text>
                 </View>
-                <Text style={[styles.selectorText, { color: colors.text }]}>{selectedAccount.name}</Text>
-              </View>
+              ) : (
+                <Text style={[styles.selectorText, { color: colors.textDisabled }]}>Selecionar conta</Text>
+              )}
               <ChevronRight size={16} color={colors.textSecondary} />
             </Pressable>
 
@@ -214,7 +219,7 @@ export function AddTransactionModal({ visible, account, accounts, onClose }: Pro
       <SelectAccountModal
         visible={showAccountPicker}
         accounts={accounts}
-        selectedId={selectedAccount.id}
+        selectedId={selectedAccount?.id ?? null}
         onSelect={(a) => { setSelectedAccount(a); setShowAccountPicker(false); }}
         onClose={() => setShowAccountPicker(false)}
         showTotal={false}

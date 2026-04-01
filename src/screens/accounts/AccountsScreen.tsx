@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
-import { Plus, PenLine, ArrowRightLeft, History } from 'lucide-react-native';
+import { Plus, ArrowRightLeft, History } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { useAccounts } from '@/hooks/useAccounts';
 import { AccountCard } from '@/components/shared/AccountCard';
@@ -58,15 +58,10 @@ export function AccountsScreen({ navigation }: Props) {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
-          <View style={styles.cardRow}>
-            <AccountCard
-              account={item}
-              onPress={() => navigation.navigate('AccountDetail', { accountId: item.id, accountName: item.name, accountColor: item.color })}
-            />
-            <Pressable onPress={() => setEditAccount(item)} style={styles.editBtn} hitSlop={8}>
-              <PenLine size={16} color={colors.textSecondary} />
-            </Pressable>
-          </View>
+          <AccountCard
+            account={item}
+            onPress={() => setEditAccount(item)}
+          />
         )}
         ListEmptyComponent={
           <View style={styles.empty}>
@@ -81,16 +76,12 @@ export function AccountsScreen({ navigation }: Props) {
               <View style={[styles.archivedDivider, { backgroundColor: colors.border }]} />
               <Text style={[styles.archivedHeader, { color: colors.textSecondary }]}>Arquivadas</Text>
               {archived.map((item) => (
-                <View key={item.id} style={styles.cardRow}>
-                  <View style={styles.archivedCard}>
-                    <AccountCard
-                      account={item}
-                      onPress={() => setEditAccount(item)}
-                    />
-                  </View>
-                  <Pressable onPress={() => setEditAccount(item)} style={styles.editBtn} hitSlop={8}>
-                    <PenLine size={16} color={colors.textSecondary} />
-                  </Pressable>
+                <View key={item.id} style={styles.archivedCard}>
+                  <AccountCard
+                    key={item.id}
+                    account={item}
+                    onPress={() => setEditAccount(item)}
+                  />
                 </View>
               ))}
             </View>
@@ -125,8 +116,6 @@ const styles = StyleSheet.create({
   },
   actionText: { fontSize: 14, fontWeight: '600' },
   list: { paddingHorizontal: 16, paddingBottom: 0 },
-  cardRow: { flexDirection: 'row', alignItems: 'center' },
-  editBtn: { paddingLeft: 8, paddingBottom: 10 },
   empty: { alignItems: 'center', marginTop: 60 },
   emptyText: { fontSize: 15 },
   archivedSection: { marginTop: 8, paddingBottom: 100 },

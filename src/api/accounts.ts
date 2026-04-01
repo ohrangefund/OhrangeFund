@@ -27,6 +27,7 @@ export async function createAccount(
     color: data.color,
     icon: data.icon,
     archived: false,
+    show_in_general: true,
     bank_account_id: null,
     created_at: serverTimestamp(),
     updated_at: serverTimestamp(),
@@ -35,7 +36,7 @@ export async function createAccount(
 
 export async function updateAccount(
   accountId: string,
-  data: Partial<Pick<Account, 'name' | 'color' | 'icon'>>,
+  data: Partial<Pick<Account, 'name' | 'color' | 'icon' | 'show_in_general'>>,
 ): Promise<void> {
   await updateDoc(doc(db, 'accounts', accountId), {
     ...data,

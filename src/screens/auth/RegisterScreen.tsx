@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -26,9 +26,12 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const submitting = useRef(false);
 
   async function handleRegister() {
     if (!email || !password) { setError('Preenche todos os campos.'); return; }
+    if (submitting.current) return;
+    submitting.current = true;
     setError('');
     setLoading(true);
     try {
@@ -44,6 +47,7 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
     } catch (e: any) {
       setError(getErrorMessage(e.code));
     } finally {
+      submitting.current = false;
       setLoading(false);
     }
   }

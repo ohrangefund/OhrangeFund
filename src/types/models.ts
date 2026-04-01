@@ -8,6 +8,7 @@ export interface Account {
   color: string;   // hex
   icon: string;    // nome do ícone Lucide
   archived: boolean;
+  show_in_general: boolean;
   bank_account_id: string | null;
   created_at: Timestamp;
   updated_at: Timestamp;

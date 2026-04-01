@@ -22,7 +22,6 @@ export type HomeStackParamList = {
 
 export type AccountsStackParamList = {
   AccountsMain: undefined;
-  AccountDetail: { accountId: string; accountName: string; accountColor: string };
   TransfersHistory: undefined;
 };
 

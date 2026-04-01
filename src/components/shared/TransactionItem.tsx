@@ -21,10 +21,11 @@ const ICONS: Record<string, React.FC<{ size: number; color: string }>> = {
 interface TransactionItemProps {
   transaction: Transaction;
   category: Category | undefined;
+  accountName?: string;
   onPress: () => void;
 }
 
-export function TransactionItem({ transaction, category, onPress }: TransactionItemProps) {
+export function TransactionItem({ transaction, category, accountName, onPress }: TransactionItemProps) {
   const { colors } = useTheme();
   const Icon = ICONS[category?.icon ?? ''] ?? ShoppingCart;
   const iconColor = category?.color ?? colors.textSecondary;
@@ -47,7 +48,7 @@ export function TransactionItem({ transaction, category, onPress }: TransactionI
           {transaction.description || category?.name || '—'}
         </Text>
         <Text style={[styles.date, { color: colors.textSecondary }]}>
-          {formatRelativeDate(transaction.date)}
+          {formatRelativeDate(transaction.date)}{accountName ? ` · ${accountName}` : ''}
         </Text>
       </View>
       <Text style={[styles.amount, { color: amountColor }]}>

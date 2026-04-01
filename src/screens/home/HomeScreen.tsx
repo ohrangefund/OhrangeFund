@@ -57,9 +57,16 @@ export function HomeScreen() {
   const { transactions, loading: txLoading, hasMore, loadMore } = useTransactions(selectedAccountId);
   const { categories } = useCategories();
 
+  const generalAccountIds = useMemo(
+    () => new Set(accounts.filter((a) => a.show_in_general !== false).map((a) => a.id)),
+    [accounts],
+  );
+
   const filteredTransactions = useMemo(
-    () => transactions.filter((t) => t.type === activeTab),
-    [transactions, activeTab],
+    () => transactions.filter(
+      (t) => t.type === activeTab && (isTotal ? generalAccountIds.has(t.account_id) : true),
+    ),
+    [transactions, activeTab, isTotal, generalAccountIds],
   );
 
   const displayAmount = useMemo(
@@ -151,6 +158,7 @@ export function HomeScreen() {
             <TransactionItem
               transaction={item}
               category={categories.find((c) => c.id === item.category_id)}
+              accountName={isTotal ? (accounts.find((a) => a.id === item.account_id)?.name) : undefined}
               onPress={() => setEditTransaction(item)}
             />
           )}
@@ -173,8 +181,8 @@ export function HomeScreen() {
 
       {/* FAB */}
       <Pressable
-        onPress={() => selectedAccount && setShowAdd(true)}
-        style={({ pressed }) => [styles.fab, { backgroundColor: colors.primary, opacity: isTotal ? 0.35 : pressed ? 0.85 : 1 }]}
+        onPress={() => setShowAdd(true)}
+        style={({ pressed }) => [styles.fab, { backgroundColor: colors.primary, opacity: pressed ? 0.85 : 1 }]}
       >
         <Plus size={26} color="#fff" />
       </Pressable>
@@ -187,14 +195,12 @@ export function HomeScreen() {
         onSelectTotal={handleSelectTotal}
         onClose={() => setShowAccountPicker(false)}
       />
-      {selectedAccount && (
-        <AddTransactionModal
-          visible={showAdd}
-          account={selectedAccount}
-          accounts={accounts}
-          onClose={() => setShowAdd(false)}
-        />
-      )}
+      <AddTransactionModal
+        visible={showAdd}
+        account={selectedAccount}
+        accounts={accounts}
+        onClose={() => setShowAdd(false)}
+      />
       {editTransaction && (() => {
         const editAccount = accounts.find((a) => a.id === editTransaction.account_id) ?? null;
         return editAccount ? (

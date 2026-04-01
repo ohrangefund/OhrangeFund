@@ -20,7 +20,10 @@ export function useAccounts() {
 
   const active = useMemo(() => accounts.filter((a) => !a.archived), [accounts]);
   const archived = useMemo(() => accounts.filter((a) => a.archived), [accounts]);
-  const totalBalance = useMemo(() => active.reduce((sum, a) => sum + a.balance, 0), [active]);
+  const totalBalance = useMemo(
+    () => active.filter((a) => a.show_in_general !== false).reduce((sum, a) => sum + a.balance, 0),
+    [active],
+  );
 
   return { accounts: active, archived, totalBalance, loading };
 }

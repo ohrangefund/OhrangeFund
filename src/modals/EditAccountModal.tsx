@@ -28,6 +28,7 @@ export function EditAccountModal({ account, onClose }: Props) {
   const [name, setName] = useState('');
   const [color, setColor] = useState<typeof ACCOUNT_COLORS[number]>(ACCOUNT_COLORS[0]);
   const [icon, setIcon] = useState<typeof ACCOUNT_ICONS[number]>(ACCOUNT_ICONS[0]);
+  const [showInGeneral, setShowInGeneral] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
@@ -37,6 +38,7 @@ export function EditAccountModal({ account, onClose }: Props) {
       setName(account.name);
       setColor(account.color as typeof ACCOUNT_COLORS[number]);
       setIcon(account.icon as typeof ACCOUNT_ICONS[number]);
+      setShowInGeneral(account.show_in_general !== false);
       setError('');
     }
   }, [account]);
@@ -47,7 +49,7 @@ export function EditAccountModal({ account, onClose }: Props) {
     setError('');
     setLoading(true);
     try {
-      await updateAccount(account.id, { name: name.trim(), color, icon });
+      await updateAccount(account.id, { name: name.trim(), color, icon, show_in_general: showInGeneral });
       onClose();
     } catch {
       setError('Erro ao guardar. Tenta novamente.');
@@ -123,6 +125,27 @@ export function EditAccountModal({ account, onClose }: Props) {
               })}
             </View>
 
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Mostrar no Geral</Text>
+            <View style={styles.typeRow}>
+              {([true, false] as const).map((val) => (
+                <Pressable
+                  key={String(val)}
+                  onPress={() => setShowInGeneral(val)}
+                  style={[
+                    styles.typeBtn,
+                    {
+                      backgroundColor: showInGeneral === val ? colors.primary : colors.surface,
+                      borderColor: showInGeneral === val ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <Text style={{ color: showInGeneral === val ? '#fff' : colors.textSecondary, fontWeight: '600', fontSize: 14 }}>
+                    {val ? 'Sim' : 'Não'}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
           </ScrollView>
 
           <View style={[styles.dangerSection, { borderTopColor: colors.border }]}>
@@ -176,6 +199,8 @@ const styles = StyleSheet.create({
     width: 48, height: 48, borderRadius: 12, borderWidth: 1.5,
     alignItems: 'center', justifyContent: 'center',
   },
+  typeRow: { flexDirection: 'row', gap: 10, marginBottom: 4 },
+  typeBtn: { flex: 1, borderWidth: 1.5, borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
   dangerSection: { marginTop: 32, borderTopWidth: 1 },
   dangerBtn: { paddingVertical: 16, alignItems: 'center' },
   dangerText: { fontSize: 15 },
