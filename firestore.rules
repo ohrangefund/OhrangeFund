@@ -1,0 +1,105 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Users ────────────────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read, write: if request.auth.uid == userId;
+    }
+
+    // ── Accounts ─────────────────────────────────────────────────────────────
+    match /accounts/{accountId} {
+      allow read, update, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
+    }
+
+    // ── Categories ───────────────────────────────────────────────────────────
+    match /categories/{categoryId} {
+      allow read, update, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
+    }
+
+    // ── Transactions ─────────────────────────────────────────────────────────
+    match /transactions/{transactionId} {
+      allow read, update, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
+    }
+
+    // ── Transfers ────────────────────────────────────────────────────────────
+    match /transfers/{transferId} {
+      allow read, update, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
+    }
+
+    // ── Scheduled transactions ───────────────────────────────────────────────
+    match /scheduled_transactions/{id} {
+      allow read, update, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
+    }
+
+    // ── Scheduled transfers ──────────────────────────────────────────────────
+    match /scheduled_transfers/{id} {
+      allow read, update, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
+    }
+
+    // ── Bank connections ─────────────────────────────────────────────────────
+    match /bank_connections/{id} {
+      allow read, update, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
+    }
+
+    // ── Bank accounts ────────────────────────────────────────────────────────
+    match /bank_accounts/{id} {
+      allow read, update, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
+    }
+
+    // ── Account members ──────────────────────────────────────────────────────
+    // Owner can manage; invited member can read their own entry.
+    // Will be refined in Phase 8 to allow write-permission members to create
+    // transactions on shared accounts.
+    match /account_members/{id} {
+      allow read: if request.auth.uid == resource.data.user_id
+                  || request.auth.uid == resource.data.owner_id;
+      allow create: if request.auth.uid == request.resource.data.owner_id;
+      allow update, delete: if request.auth.uid == resource.data.owner_id;
+    }
+
+    // ── Investment accounts ──────────────────────────────────────────────────
+    // 1 per user, auto-created at registration.
+    match /investment_accounts/{id} {
+      allow read, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
+      // No update needed — investment_accounts has no mutable fields
+    }
+
+    // ── Investment assets ────────────────────────────────────────────────────
+    // quantity is updated by the client via Firestore transaction (buy/sell).
+    match /investment_assets/{id} {
+      allow read, update, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
+    }
+
+    // ── Investment transactions ──────────────────────────────────────────────
+    // Immutable after creation — no update or delete from the client.
+    match /investment_transactions/{id} {
+      allow read: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
+    }
+
+    // ── Investment snapshots ─────────────────────────────────────────────────
+    // Written atomically alongside investment transactions. Read-only from client.
+    match /investment_snapshots/{id} {
+      allow read: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
+    }
+
+    // ── Scheduled investment transactions ────────────────────────────────────
+    match /scheduled_investment_transactions/{id} {
+      allow read, update, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
+    }
+
+  }
+}

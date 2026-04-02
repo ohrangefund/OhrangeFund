@@ -152,6 +152,119 @@ async function processScheduledTransfers(now: admin.firestore.Timestamp): Promis
   return processed;
 }
 
+// ─── Mock prices (mirrors src/api/investmentPrices.ts) ────────────────────────
+const MOCK_PRICES_CENTS: Record<string, number> = {
+  VWCE: 11423, CSPX: 55120, IWDA: 9870, VUSA: 10245, EIMI: 3318,
+  AAPL: 21890, TSLA: 18750, MSFT: 42300, NVDA: 87600, AMZN: 20100,
+  GOOGL: 17850, META: 55900,
+  BTC: 8_245_000, ETH: 313_500, SOL: 14_800,
+};
+
+async function getMockPrice(ticker: string): Promise<number> {
+  const price = MOCK_PRICES_CENTS[ticker];
+  if (!price) throw new Error(`Unknown ticker: ${ticker}`);
+  return price;
+}
+
+async function processScheduledInvestmentTransactions(
+  now: admin.firestore.Timestamp,
+): Promise<number> {
+  const snap = await db.collection('scheduled_investment_transactions')
+    .where('next_date', '<=', now)
+    .get();
+
+  let processed = 0;
+
+  for (const schedDoc of snap.docs) {
+    const sched = schedDoc.data();
+    try {
+      // Read ticker from asset document (outside transaction — read-only)
+      const assetDocPre = await db.collection('investment_assets').doc(sched.asset_id).get();
+      if (!assetDocPre.exists) continue;
+      const ticker = assetDocPre.data()!.ticker as string;
+      const pricePerUnit = await getMockPrice(ticker);
+
+      await db.runTransaction(async (txn) => {
+        const assetRef   = db.collection('investment_assets').doc(sched.asset_id);
+        const accountRef = db.collection('accounts').doc(sched.account_id);
+        const assetSnap   = await txn.get(assetRef);
+        const accountSnap = await txn.get(accountRef);
+        if (!assetSnap.exists || !accountSnap.exists) return;
+
+        const currentQty     = assetSnap.data()!.quantity as number;
+        const currentBalance = accountSnap.data()!.balance as number;
+        const price          = pricePerUnit; // already fetched above
+        const quantity       = sched.amount / price;
+
+        if (sched.type === 'sell' && quantity > currentQty + 1e-9) {
+          console.warn(`Skipping sell — insufficient quantity for asset ${sched.asset_id}`);
+          return;
+        }
+
+        const newQty = sched.type === 'buy'
+          ? currentQty + quantity
+          : Math.max(0, currentQty - quantity);
+
+        const newBalance = sched.type === 'buy'
+          ? currentBalance - sched.amount
+          : currentBalance + sched.amount;
+
+        // Create investment_transaction
+        const txnRef = db.collection('investment_transactions').doc();
+        txn.set(txnRef, {
+          user_id: sched.user_id,
+          investment_account_id: sched.investment_account_id,
+          asset_id: sched.asset_id,
+          account_id: sched.account_id,
+          type: sched.type,
+          amount: sched.amount,
+          quantity,
+          price_per_unit: price,
+          description: sched.description ?? null,
+          date: sched.next_date,
+          created_at: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // Snapshot (simplified — single asset value for cron)
+        const snapRef = db.collection('investment_snapshots').doc();
+        txn.set(snapRef, {
+          user_id: sched.user_id,
+          investment_account_id: sched.investment_account_id,
+          total_value: Math.round(newQty * price),
+          trigger: 'cron',
+          captured_at: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        txn.update(assetRef, { quantity: newQty });
+        txn.update(accountRef, {
+          balance: newBalance,
+          updated_at: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // Advance or delete scheduled item
+        if (sched.recurrence === 'once') {
+          txn.delete(schedDoc.ref);
+        } else {
+          const nextDate = calcNextDate(sched.next_date.toDate(), sched.recurrence as Recurrence);
+          const nextTimestamp = admin.firestore.Timestamp.fromDate(nextDate);
+          const expired = sched.end_date && nextTimestamp > sched.end_date;
+          if (expired) {
+            txn.delete(schedDoc.ref);
+          } else {
+            txn.update(schedDoc.ref, { next_date: nextTimestamp });
+          }
+        }
+      });
+
+      processed++;
+    } catch (err) {
+      console.error(`Failed to process scheduled_investment_transaction ${schedDoc.id}:`, err);
+    }
+  }
+
+  return processed;
+}
+
 export default async function handler(req: any, res: any) {
   // Verify this is a legitimate cron invocation from Vercel
   const authHeader = req.headers['authorization'];
@@ -161,12 +274,13 @@ export default async function handler(req: any, res: any) {
 
   try {
     const now = admin.firestore.Timestamp.now();
-    const [transactions, transfers] = await Promise.all([
+    const [transactions, transfers, investments] = await Promise.all([
       processScheduledTransactions(now),
       processScheduledTransfers(now),
+      processScheduledInvestmentTransactions(now),
     ]);
-    console.log(`Cron completed: ${transactions} transactions, ${transfers} transfers processed.`);
-    return res.status(200).json({ ok: true, transactions, transfers });
+    console.log(`Cron completed: ${transactions} transactions, ${transfers} transfers, ${investments} investments processed.`);
+    return res.status(200).json({ ok: true, transactions, transfers, investments });
   } catch (err) {
     console.error('Cron fatal error:', err);
     return res.status(500).json({ error: 'Internal error' });

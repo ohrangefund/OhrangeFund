@@ -15,29 +15,37 @@ export interface Account {
 }
 
 export const ACCOUNT_COLORS = [
-  '#F97316', // laranja
-  '#3B82F6', // azul
-  '#22C55E', // verde
-  '#EF4444', // vermelho
-  '#8B5CF6', // roxo
-  '#EC4899', // rosa
-  '#F59E0B', // âmbar
-  '#14B8A6', // teal
-  '#64748B', // cinza
-  '#84CC16', // lima
+  '#F97316', '#3B82F6', '#22C55E', '#EF4444', '#8B5CF6',
+  '#EC4899', '#F59E0B', '#14B8A6', '#64748B', '#84CC16',
+] as const;
+
+export const ALL_COLORS = [
+  '#F97316', '#3B82F6', '#22C55E', '#EF4444', '#8B5CF6',
+  '#EC4899', '#F59E0B', '#14B8A6', '#64748B', '#84CC16',
+  '#06B6D4', '#6366F1', '#EAB308', '#F43F5E', '#D946EF',
+  '#0EA5E9', '#7C3AED', '#94A3B8', '#16A34A', '#1D4ED8',
+  '#DC2626', '#9333EA', '#F87171', '#86EFAC', '#93C5FD',
+  '#C4B5FD', '#FCD34D', '#6EE7B7', '#A78BFA', '#FB923C',
 ] as const;
 
 export const ACCOUNT_ICONS = [
-  'wallet',
-  'credit-card',
-  'landmark',
-  'banknote',
-  'piggy-bank',
-  'briefcase',
-  'home',
-  'car',
-  'shopping-bag',
-  'globe',
+  'wallet', 'credit-card', 'landmark', 'banknote', 'piggy-bank',
+  'briefcase', 'home', 'car', 'shopping-bag', 'globe',
+] as const;
+
+export const ALL_ICONS = [
+  'wallet', 'credit-card', 'landmark', 'banknote', 'piggy-bank',
+  'trending-up', 'trending-down', 'dollar-sign', 'receipt', 'bar-chart-2',
+  'percent', 'coins', 'calculator',
+  'shopping-cart', 'utensils', 'coffee', 'pizza', 'apple', 'beer', 'wine',
+  'car', 'bus', 'bike', 'plane', 'train', 'fuel', 'ship', 'truck', 'map-pin',
+  'home', 'tv', 'wrench', 'hammer', 'package',
+  'heart', 'heart-pulse', 'activity', 'pill', 'baby', 'smile',
+  'shopping-bag', 'shirt', 'tag', 'watch', 'gem', 'star',
+  'music', 'film', 'gamepad-2', 'headphones', 'camera',
+  'graduation-cap', 'book-open', 'pen', 'briefcase', 'building', 'laptop',
+  'dumbbell', 'globe', 'sun', 'moon', 'zap', 'gift', 'leaf', 'droplets', 'flame',
+  'wifi', 'smartphone', 'bell',
 ] as const;
 
 export type AccountIcon = typeof ACCOUNT_ICONS[number];
@@ -117,5 +125,92 @@ export interface ScheduledTransfer {
   recurrence: Recurrence;
   next_date: Timestamp;
   end_date: Timestamp | null;
+  created_at: Timestamp;
+}
+
+// ─── Investments ──────────────────────────────────────────────────────────────
+
+export interface InvestmentAccount {
+  id: string;
+  user_id: string;
+  created_at: Timestamp;
+}
+
+export type AssetType = 'etf' | 'stock' | 'crypto';
+
+export interface SupportedAsset {
+  ticker: string;
+  name: string;
+  type: AssetType;
+}
+
+export const SUPPORTED_ASSETS: SupportedAsset[] = [
+  // ETFs
+  { ticker: 'VWCE', name: 'Vanguard FTSE All-World', type: 'etf' },
+  { ticker: 'CSPX', name: 'iShares Core S&P 500', type: 'etf' },
+  { ticker: 'IWDA', name: 'iShares Core MSCI World', type: 'etf' },
+  { ticker: 'VUSA', name: 'Vanguard S&P 500', type: 'etf' },
+  { ticker: 'EIMI', name: 'iShares Core MSCI EM IMI', type: 'etf' },
+  // Stocks
+  { ticker: 'AAPL', name: 'Apple', type: 'stock' },
+  { ticker: 'TSLA', name: 'Tesla', type: 'stock' },
+  { ticker: 'MSFT', name: 'Microsoft', type: 'stock' },
+  { ticker: 'NVDA', name: 'NVIDIA', type: 'stock' },
+  { ticker: 'AMZN', name: 'Amazon', type: 'stock' },
+  { ticker: 'GOOGL', name: 'Alphabet (Google)', type: 'stock' },
+  { ticker: 'META', name: 'Meta Platforms', type: 'stock' },
+  // Crypto
+  { ticker: 'BTC', name: 'Bitcoin', type: 'crypto' },
+  { ticker: 'ETH', name: 'Ethereum', type: 'crypto' },
+  { ticker: 'SOL', name: 'Solana', type: 'crypto' },
+];
+
+export interface InvestmentAsset {
+  id: string;
+  user_id: string;
+  investment_account_id: string;
+  ticker: string;
+  name: string;
+  type: AssetType;
+  quantity: number;     // unidades acumuladas (decimal, ex: 6.5)
+  created_at: Timestamp;
+}
+
+export interface InvestmentTransaction {
+  id: string;
+  user_id: string;
+  investment_account_id: string;
+  asset_id: string;
+  account_id: string;       // conta regular debitada (buy) ou creditada (sell)
+  type: 'buy' | 'sell';
+  amount: number;           // valor em cêntimos, sempre positivo
+  quantity: number;         // unidades transacionadas, sempre positivo
+  price_per_unit: number;   // preço unitário no momento (cêntimos)
+  description: string | null;
+  date: Timestamp;
+  created_at: Timestamp;
+}
+
+export interface InvestmentSnapshot {
+  id: string;
+  user_id: string;
+  investment_account_id: string;
+  total_value: number;      // valor total do portfolio em cêntimos
+  trigger: 'buy' | 'sell' | 'cron';
+  captured_at: Timestamp;
+}
+
+export interface ScheduledInvestmentTransaction {
+  id: string;
+  user_id: string;
+  investment_account_id: string;
+  asset_id: string;
+  account_id: string;       // conta regular a debitar (buy) ou creditar (sell)
+  type: 'buy' | 'sell';
+  amount: number;           // valor em cêntimos
+  recurrence: Recurrence;
+  next_date: Timestamp;
+  end_date: Timestamp | null;
+  description: string | null;
   created_at: Timestamp;
 }

@@ -3,21 +3,14 @@ import {
   Modal, View, Text, TextInput, ScrollView,
   Pressable, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import {
-  Wallet, CreditCard, Landmark, Banknote, PiggyBank,
-  Briefcase, Home, Car, ShoppingBag, Globe, X,
-} from 'lucide-react-native';
+import { X } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { updateAccount, archiveAccount } from '@/api/accounts';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { IconPickerModal, ALL_ICONS_MAP } from '@/components/ui/IconPickerModal';
+import { ColorPickerModal } from '@/components/ui/ColorPickerModal';
 import { ACCOUNT_COLORS, ACCOUNT_ICONS, type Account } from '@/types/models';
-
-const ICONS_MAP: Record<string, React.FC<{ size: number; color: string }>> = {
-  'wallet': Wallet, 'credit-card': CreditCard, 'landmark': Landmark,
-  'banknote': Banknote, 'piggy-bank': PiggyBank, 'briefcase': Briefcase,
-  'home': Home, 'car': Car, 'shopping-bag': ShoppingBag, 'globe': Globe,
-};
 
 interface Props {
   account: Account | null;
@@ -28,18 +21,20 @@ export function EditAccountModal({ account, onClose }: Props) {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const [name, setName] = useState('');
-  const [color, setColor] = useState<typeof ACCOUNT_COLORS[number]>(ACCOUNT_COLORS[0]);
-  const [icon, setIcon] = useState<typeof ACCOUNT_ICONS[number]>(ACCOUNT_ICONS[0]);
+  const [color, setColor] = useState<string>(ACCOUNT_COLORS[0]);
+  const [icon, setIcon] = useState<string>(ACCOUNT_ICONS[0]);
   const [showInGeneral, setShowInGeneral] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+  const [showIconPicker, setShowIconPicker] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
 
   useEffect(() => {
     if (account) {
       setName(account.name);
-      setColor(account.color as typeof ACCOUNT_COLORS[number]);
-      setIcon(account.icon as typeof ACCOUNT_ICONS[number]);
+      setColor(account.color);
+      setIcon(account.icon);
       setShowInGeneral(account.show_in_general !== false);
       setError('');
     }
@@ -73,6 +68,16 @@ export function EditAccountModal({ account, onClose }: Props) {
     }
   }
 
+  const inlineIconSet = new Set(ACCOUNT_ICONS as readonly string[]);
+  const displayIcons: string[] = inlineIconSet.has(icon)
+    ? [...ACCOUNT_ICONS]
+    : [icon, ...(ACCOUNT_ICONS as readonly string[])];
+
+  const inlineColorSet = new Set(ACCOUNT_COLORS as readonly string[]);
+  const displayColors: string[] = inlineColorSet.has(color)
+    ? [...ACCOUNT_COLORS]
+    : [color, ...(ACCOUNT_COLORS as readonly string[])];
+
   return (
     <Modal visible={!!account} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
@@ -98,19 +103,26 @@ export function EditAccountModal({ account, onClose }: Props) {
 
             <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.color')}</Text>
             <View style={styles.colorGrid}>
-              {ACCOUNT_COLORS.map((c) => (
+              {displayColors.map((c) => (
                 <Pressable
                   key={c}
                   onPress={() => setColor(c)}
                   style={[styles.colorSwatch, { backgroundColor: c, borderWidth: color === c ? 3 : 0, borderColor: colors.text }]}
                 />
               ))}
+              <Pressable
+                onPress={() => setShowColorPicker(true)}
+                style={[styles.colorSwatch, { backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' }]}
+              >
+                <Text style={{ color: colors.textSecondary, fontSize: 15, fontWeight: '700', letterSpacing: 1 }}>•••</Text>
+              </Pressable>
             </View>
 
             <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.icon')}</Text>
             <View style={styles.iconGrid}>
-              {ACCOUNT_ICONS.map((ic) => {
-                const Icon = ICONS_MAP[ic];
+              {displayIcons.map((ic) => {
+                const Icon = ALL_ICONS_MAP[ic];
+                if (!Icon) return null;
                 const selected = icon === ic;
                 return (
                   <Pressable
@@ -125,6 +137,12 @@ export function EditAccountModal({ account, onClose }: Props) {
                   </Pressable>
                 );
               })}
+              <Pressable
+                onPress={() => setShowIconPicker(true)}
+                style={[styles.iconSwatch, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              >
+                <Text style={{ color: colors.textSecondary, fontSize: 18, fontWeight: '700', letterSpacing: 1 }}>•••</Text>
+              </Pressable>
             </View>
 
             <Text style={[styles.label, { color: colors.textSecondary }]}>{t('modalAccount.showInGeneral')}</Text>
@@ -172,12 +190,26 @@ export function EditAccountModal({ account, onClose }: Props) {
           </View>
         </View>
       </KeyboardAvoidingView>
+
       <ConfirmModal
         visible={showArchiveConfirm}
         title={account?.archived ? t('modalAccount.unarchive') : t('modalAccount.archive')}
         message={account?.archived ? t('modalAccount.unarchiveMsg') : t('modalAccount.archiveMsg')}
         onConfirm={handleArchiveConfirm}
         onCancel={() => setShowArchiveConfirm(false)}
+      />
+      <IconPickerModal
+        visible={showIconPicker}
+        selectedIcon={icon}
+        selectedColor={color}
+        onSelect={setIcon}
+        onClose={() => setShowIconPicker(false)}
+      />
+      <ColorPickerModal
+        visible={showColorPicker}
+        selectedColor={color}
+        onSelect={setColor}
+        onClose={() => setShowColorPicker(false)}
       />
     </Modal>
   );

@@ -5,6 +5,7 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useTranslation } from 'react-i18next';
 import { auth, db } from '@/api/firebase';
 import { createDefaultCategories } from '@/api/categories';
+import { createInvestmentAccount } from '@/api/investmentAccounts';
 import { useTheme } from '@/context/ThemeContext';
 import { LanguagePicker } from '@/components/ui/LanguagePicker';
 import type { AuthScreenProps } from '@/types/navigation';
@@ -44,6 +45,7 @@ export function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
         created_at: serverTimestamp(),
       });
       await createDefaultCategories(user.uid, language);
+      await createInvestmentAccount(user.uid);
     } catch (e: any) {
       setError(getErrorMessage(e.code));
     } finally {

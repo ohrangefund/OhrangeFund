@@ -265,8 +265,40 @@ service cloud.firestore {
       allow update, delete: if request.auth.uid == resource.data.owner_id;
     }
 
+    // investment_accounts: 1 por user, criada no registo
+    match /investment_accounts/{id} {
+      allow read, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
+    }
+
+    // investment_assets: quantity atualizada via Firestore transaction (buy/sell)
+    match /investment_assets/{id} {
+      allow read, update, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
+    }
+
+    // investment_transactions: imutáveis após criação — sem update/delete do cliente
+    match /investment_transactions/{id} {
+      allow read: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
+    }
+
+    // investment_snapshots: escritos atomicamente com cada compra/venda — read-only do cliente
+    match /investment_snapshots/{id} {
+      allow read: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
+    }
+
+    // scheduled_investment_transactions
+    match /scheduled_investment_transactions/{id} {
+      allow read, update, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
+    }
+
   }
 }
 ```
 
 **Nota:** as rules de `account_members` serão refinadas na Fase 8 para permitir que membros com permissão `write` possam criar transações em contas partilhadas.
+
+**Nota:** o ficheiro `firestore.rules` na raiz do projecto é a fonte de verdade — estas regras devem estar sincronizadas com ele.

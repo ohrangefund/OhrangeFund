@@ -3,25 +3,14 @@ import {
   Modal, View, Text, TextInput, ScrollView,
   Pressable, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import {
-  ShoppingCart, Utensils, Car, Home, HeartPulse, GraduationCap,
-  Zap, Plane, Coffee, Briefcase, TrendingUp, TrendingDown, Gift, PiggyBank,
-  Banknote, Wallet, Dumbbell, Shirt, Music, X,
-} from 'lucide-react-native';
+import { X } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { createCategory } from '@/api/categories';
 import { CATEGORY_COLORS, CATEGORY_ICONS } from '@/types/models';
-
-const ICONS_MAP: Record<string, React.FC<{ size: number; color: string }>> = {
-  'shopping-cart': ShoppingCart, 'utensils': Utensils, 'car': Car,
-  'home': Home, 'heart-pulse': HeartPulse, 'graduation-cap': GraduationCap,
-  'zap': Zap, 'plane': Plane, 'coffee': Coffee, 'briefcase': Briefcase,
-  'trending-up': TrendingUp, 'trending-down': TrendingDown, 'gift': Gift, 'piggy-bank': PiggyBank,
-  'banknote': Banknote, 'wallet': Wallet, 'dumbbell': Dumbbell,
-  'shirt': Shirt, 'music': Music,
-};
+import { IconPickerModal, ALL_ICONS_MAP } from '@/components/ui/IconPickerModal';
+import { ColorPickerModal } from '@/components/ui/ColorPickerModal';
 
 interface Props {
   visible: boolean;
@@ -34,10 +23,12 @@ export function AddCategoryModal({ visible, initialType = 'expense', onClose }: 
   const { user } = useAuth();
   const { t } = useTranslation();
   const [name, setName] = useState('');
-  const [color, setColor] = useState<typeof CATEGORY_COLORS[number]>(CATEGORY_COLORS[0]);
-  const [icon, setIcon] = useState<typeof CATEGORY_ICONS[number]>(CATEGORY_ICONS[0]);
+  const [color, setColor] = useState<string>(CATEGORY_COLORS[0]);
+  const [icon, setIcon] = useState<string>(CATEGORY_ICONS[0]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showIconPicker, setShowIconPicker] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
 
   function reset() {
     setName(''); setColor(CATEGORY_COLORS[0]);
@@ -59,6 +50,16 @@ export function AddCategoryModal({ visible, initialType = 'expense', onClose }: 
       setLoading(false);
     }
   }
+
+  const inlineIconSet = new Set(CATEGORY_ICONS as readonly string[]);
+  const displayIcons: string[] = inlineIconSet.has(icon)
+    ? [...CATEGORY_ICONS]
+    : [icon, ...(CATEGORY_ICONS as readonly string[])];
+
+  const inlineColorSet = new Set(CATEGORY_COLORS as readonly string[]);
+  const displayColors: string[] = inlineColorSet.has(color)
+    ? [...CATEGORY_COLORS]
+    : [color, ...(CATEGORY_COLORS as readonly string[])];
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
@@ -95,19 +96,26 @@ export function AddCategoryModal({ visible, initialType = 'expense', onClose }: 
 
             <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.color')}</Text>
             <View style={styles.colorGrid}>
-              {CATEGORY_COLORS.map((c) => (
+              {displayColors.map((c) => (
                 <Pressable
                   key={c}
                   onPress={() => setColor(c)}
                   style={[styles.colorSwatch, { backgroundColor: c, borderWidth: color === c ? 3 : 0, borderColor: colors.text }]}
                 />
               ))}
+              <Pressable
+                onPress={() => setShowColorPicker(true)}
+                style={[styles.colorSwatch, { backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' }]}
+              >
+                <Text style={{ color: colors.textSecondary, fontSize: 15, fontWeight: '700', letterSpacing: 1 }}>•••</Text>
+              </Pressable>
             </View>
 
             <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.icon')}</Text>
             <View style={styles.iconGrid}>
-              {CATEGORY_ICONS.map((ic) => {
-                const Icon = ICONS_MAP[ic];
+              {displayIcons.map((ic) => {
+                const Icon = ALL_ICONS_MAP[ic];
+                if (!Icon) return null;
                 const selected = icon === ic;
                 return (
                   <Pressable
@@ -122,6 +130,12 @@ export function AddCategoryModal({ visible, initialType = 'expense', onClose }: 
                   </Pressable>
                 );
               })}
+              <Pressable
+                onPress={() => setShowIconPicker(true)}
+                style={[styles.iconSwatch, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              >
+                <Text style={{ color: colors.textSecondary, fontSize: 18, fontWeight: '700', letterSpacing: 1 }}>•••</Text>
+              </Pressable>
             </View>
           </ScrollView>
 
@@ -139,6 +153,20 @@ export function AddCategoryModal({ visible, initialType = 'expense', onClose }: 
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      <IconPickerModal
+        visible={showIconPicker}
+        selectedIcon={icon}
+        selectedColor={color}
+        onSelect={setIcon}
+        onClose={() => setShowIconPicker(false)}
+      />
+      <ColorPickerModal
+        visible={showColorPicker}
+        selectedColor={color}
+        onSelect={setColor}
+        onClose={() => setShowColorPicker(false)}
+      />
     </Modal>
   );
 }

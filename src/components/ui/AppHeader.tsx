@@ -23,8 +23,8 @@ const STATUS_BAR_HEIGHT = Platform.OS === 'android' ? (StatusBar.currentHeight ?
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: STATUS_BAR_HEIGHT + 12,
-    paddingBottom: 12,
+    paddingTop: STATUS_BAR_HEIGHT + 20,
+    paddingBottom: 20,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',

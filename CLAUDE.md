@@ -8,8 +8,9 @@ App móvel de gestão financeira pessoal. React Native (Expo) com Firebase (Auth
 
 - **Mobile:** React Native (Expo SDK 54), TypeScript
 - **Auth + DB:** Firebase Authentication + Firestore (acesso direto do cliente via SDK)
-- **APIs externas:** Vercel Functions (cron de agendamentos ativo; GoCardless e push notifications — Fase 7+)
+- **APIs externas:** Vercel Functions (cron de agendamentos ativo; integração bancária e push notifications — Fase 7+)
 - **Cron:** Vercel Cron (diário às 3h UTC) — processa agendamentos vencidos. Railway removido do plano.
+- **Integração bancária:** GoCardless Bank Account Data fechou novos registos. Alternativas avaliadas: **TrueLayer** e **Tink** (ambos suportam Revolut e bancos portugueses). Provider ainda não escolhido — decisão pendente antes de implementar Fase 7.
 
 ## Ficheiros de referência
 
@@ -30,7 +31,9 @@ App móvel de gestão financeira pessoal. React Native (Expo) com Firebase (Auth
 | 4 | ✅ | Transações manuais (CRUD, saldo atómico) |
 | 5 | ✅ | Transferências (CRUD, saldo atómico em 2 contas) |
 | 6 | ✅ | Agendamentos (UI + Vercel Cron diário às 3h UTC) |
-| 7–13 | ⏳ | Banco, Partilha, Analytics, etc. |
+| 9 | ✅ | Analytics: donut chart na home, gráfico de linha de saldo, barras receita vs despesa, seletores de período com navegação ←→ |
+| 7 | ⏳ | Integração bancária — provider pendente (TrueLayer ou Tink) |
+| 8, 10–13 | ⏳ | Partilha, Orçamentos, Net Worth, Push Notifications, Polish |
 
 ## Arquitectura de navegação
 
@@ -38,7 +41,7 @@ A barra de tabs inferior está **oculta**. Toda a navegação entre tabs é feit
 
 **Mecanismo:** `NavBridge` é renderizado como `tabBar` prop do `Tab.Navigator`, captura o objeto `navigation` e regista-o em `DrawerContext.registerNavigate`. O drawer usa esse callback para navegar entre tabs.
 
-**Tabs actuais:** Home, Accounts, Scheduled, Analytics (placeholder), Categories, Settings
+**Tabs actuais:** Home, Accounts, Scheduled, Analytics, Categories, Settings
 
 ## Regras importantes
 
@@ -65,10 +68,12 @@ src/
     shared/     Componentes de domínio sem fetch (TransactionItem, AccountCard,
                 CategoryItem, TransferItem, ScheduledTransactionItem, ScheduledTransferItem)
   context/      AuthContext, ThemeContext, DrawerContext
+  components/
+    charts/     DonutChart, BalanceLineChart, IncomeExpenseBarChart (react-native-svg, sem deps extra)
   hooks/        useAccounts, useCategories, useTransactions, useTransfers,
-                useScheduledTransactions, useScheduledTransfers
+                useScheduledTransactions, useScheduledTransfers, useAnalyticsData
   navigation/   RootNavigator, AuthStack, MainTabs, stacks/
-  screens/      auth/ home/ accounts/ settings/ scheduled/
+  screens/      auth/ home/ accounts/ settings/ scheduled/ analytics/
   modals/       Add/Edit modais para Account, Category, Transaction, Transfer,
                 ScheduledTransaction, ScheduledTransfer
   constants/    theme.ts — tokens do design system

@@ -12,8 +12,13 @@ export type MainTabsParamList = {
   Accounts: undefined;
   Scheduled: undefined;
   Analytics: undefined;
+  Investments: undefined;
   Categories: undefined;
   Settings: undefined;
+};
+
+export type InvestmentsStackParamList = {
+  InvestmentsMain: undefined;
 };
 
 export type HomeStackParamList = {

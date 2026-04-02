@@ -3,28 +3,17 @@ import {
   Modal, View, Text, TextInput, ScrollView,
   Pressable, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import {
-  ShoppingCart, Utensils, Car, Home, HeartPulse, GraduationCap,
-  Zap, Plane, Coffee, Briefcase, TrendingUp, TrendingDown, Gift, PiggyBank,
-  Banknote, Wallet, Dumbbell, Shirt, Music, X,
-} from 'lucide-react-native';
+import { X } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useCategories } from '@/hooks/useCategories';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { SelectCategoryModal } from '@/components/ui/SelectCategoryModal';
+import { IconPickerModal, ALL_ICONS_MAP } from '@/components/ui/IconPickerModal';
+import { ColorPickerModal } from '@/components/ui/ColorPickerModal';
 import { updateCategory, deleteCategory, hasTransactionsForCategory, deleteCategoryWithRedirect } from '@/api/categories';
 import { CATEGORY_COLORS, CATEGORY_ICONS, type Category } from '@/types/models';
-
-const ICONS_MAP: Record<string, React.FC<{ size: number; color: string }>> = {
-  'shopping-cart': ShoppingCart, 'utensils': Utensils, 'car': Car,
-  'home': Home, 'heart-pulse': HeartPulse, 'graduation-cap': GraduationCap,
-  'zap': Zap, 'plane': Plane, 'coffee': Coffee, 'briefcase': Briefcase,
-  'trending-up': TrendingUp, 'trending-down': TrendingDown, 'gift': Gift, 'piggy-bank': PiggyBank,
-  'banknote': Banknote, 'wallet': Wallet, 'dumbbell': Dumbbell,
-  'shirt': Shirt, 'music': Music,
-};
 
 interface Props {
   category: Category | null;
@@ -37,13 +26,15 @@ export function EditCategoryModal({ category, onClose }: Props) {
   const { t } = useTranslation();
   const { incomeCategories, expenseCategories } = useCategories();
   const [name, setName] = useState('');
-  const [color, setColor] = useState<typeof CATEGORY_COLORS[number]>(CATEGORY_COLORS[0]);
-  const [icon, setIcon] = useState<typeof CATEGORY_ICONS[number]>(CATEGORY_ICONS[0]);
+  const [color, setColor] = useState<string>(CATEGORY_COLORS[0]);
+  const [icon, setIcon] = useState<string>(CATEGORY_ICONS[0]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showConfirm, setShowConfirm] = useState(false);
   const [showRedirect, setShowRedirect] = useState(false);
   const [redirectCategoryId, setRedirectCategoryId] = useState('');
+  const [showIconPicker, setShowIconPicker] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
 
   const redirectCategories = (category?.type === 'expense' ? expenseCategories : incomeCategories)
     .filter((c) => c.id !== category?.id);
@@ -51,8 +42,8 @@ export function EditCategoryModal({ category, onClose }: Props) {
   useEffect(() => {
     if (category) {
       setName(category.name);
-      setColor(category.color as typeof CATEGORY_COLORS[number]);
-      setIcon(category.icon as typeof CATEGORY_ICONS[number]);
+      setColor(category.color);
+      setIcon(category.icon);
       setError('');
       setShowConfirm(false);
       setShowRedirect(false);
@@ -103,6 +94,16 @@ export function EditCategoryModal({ category, onClose }: Props) {
     }
   }
 
+  const inlineIconSet = new Set(CATEGORY_ICONS as readonly string[]);
+  const displayIcons: string[] = inlineIconSet.has(icon)
+    ? [...CATEGORY_ICONS]
+    : [icon, ...(CATEGORY_ICONS as readonly string[])];
+
+  const inlineColorSet = new Set(CATEGORY_COLORS as readonly string[]);
+  const displayColors: string[] = inlineColorSet.has(color)
+    ? [...CATEGORY_COLORS]
+    : [color, ...(CATEGORY_COLORS as readonly string[])];
+
   return (
     <Modal visible={!!category} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
@@ -128,19 +129,26 @@ export function EditCategoryModal({ category, onClose }: Props) {
 
             <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.color')}</Text>
             <View style={styles.colorGrid}>
-              {CATEGORY_COLORS.map((c) => (
+              {displayColors.map((c) => (
                 <Pressable
                   key={c}
                   onPress={() => setColor(c)}
                   style={[styles.colorSwatch, { backgroundColor: c, borderWidth: color === c ? 3 : 0, borderColor: colors.text }]}
                 />
               ))}
+              <Pressable
+                onPress={() => setShowColorPicker(true)}
+                style={[styles.colorSwatch, { backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' }]}
+              >
+                <Text style={{ color: colors.textSecondary, fontSize: 15, fontWeight: '700', letterSpacing: 1 }}>•••</Text>
+              </Pressable>
             </View>
 
             <Text style={[styles.label, { color: colors.textSecondary }]}>{t('common.icon')}</Text>
             <View style={styles.iconGrid}>
-              {CATEGORY_ICONS.map((ic) => {
-                const Icon = ICONS_MAP[ic];
+              {displayIcons.map((ic) => {
+                const Icon = ALL_ICONS_MAP[ic];
+                if (!Icon) return null;
                 const selected = icon === ic;
                 return (
                   <Pressable
@@ -155,6 +163,12 @@ export function EditCategoryModal({ category, onClose }: Props) {
                   </Pressable>
                 );
               })}
+              <Pressable
+                onPress={() => setShowIconPicker(true)}
+                style={[styles.iconSwatch, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              >
+                <Text style={{ color: colors.textSecondary, fontSize: 18, fontWeight: '700', letterSpacing: 1 }}>•••</Text>
+              </Pressable>
             </View>
 
           </ScrollView>
@@ -184,6 +198,7 @@ export function EditCategoryModal({ category, onClose }: Props) {
           </View>
         </View>
       </KeyboardAvoidingView>
+
       <SelectCategoryModal
         visible={showRedirect}
         title={t('modalCategory.redirectTitle')}
@@ -199,6 +214,19 @@ export function EditCategoryModal({ category, onClose }: Props) {
         confirmLabel={t('common.delete')}
         onConfirm={handleConfirmDelete}
         onCancel={() => setShowConfirm(false)}
+      />
+      <IconPickerModal
+        visible={showIconPicker}
+        selectedIcon={icon}
+        selectedColor={color}
+        onSelect={setIcon}
+        onClose={() => setShowIconPicker(false)}
+      />
+      <ColorPickerModal
+        visible={showColorPicker}
+        selectedColor={color}
+        onSelect={setColor}
+        onClose={() => setShowColorPicker(false)}
       />
     </Modal>
   );
