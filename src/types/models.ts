@@ -200,6 +200,17 @@ export interface InvestmentSnapshot {
   captured_at: Timestamp;
 }
 
+// ─── Budgets ──────────────────────────────────────────────────────────────────
+
+export interface Budget {
+  id: string;
+  user_id: string;
+  category_id: string;
+  amount_limit: number;  // cêntimos por mês
+  created_at: Timestamp;
+  updated_at: Timestamp;
+}
+
 export interface ScheduledInvestmentTransaction {
   id: string;
   user_id: string;

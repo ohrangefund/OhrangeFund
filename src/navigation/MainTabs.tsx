@@ -8,6 +8,7 @@ import { AccountsStack } from '@/navigation/stacks/AccountsStack';
 import { ScheduledStack } from '@/navigation/stacks/ScheduledStack';
 import { AnalyticsStack } from '@/navigation/stacks/AnalyticsStack';
 import { InvestmentsStack } from '@/navigation/stacks/InvestmentsStack';
+import { BudgetsStack } from '@/navigation/stacks/BudgetsStack';
 import { SettingsStack } from '@/navigation/stacks/SettingsStack';
 import { AppHeader } from '@/components/ui/AppHeader';
 import { DrawerMenu } from '@/components/ui/DrawerMenu';
@@ -42,6 +43,7 @@ function TabsWithDrawer() {
         <Tab.Screen name="Scheduled" component={ScheduledStack} />
         <Tab.Screen name="Analytics" component={AnalyticsStack} />
         <Tab.Screen name="Investments" component={InvestmentsStack} />
+        <Tab.Screen name="Budgets" component={BudgetsStack} />
         <Tab.Screen name="Categories" component={CategoriesScreen} />
         <Tab.Screen name="Settings" component={SettingsStack} />
       </Tab.Navigator>

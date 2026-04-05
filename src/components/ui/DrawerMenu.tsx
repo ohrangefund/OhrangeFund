@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { View, Text, Pressable, StyleSheet, Animated } from 'react-native';
-import { Home, Wallet, CalendarClock, BarChart2, TrendingUp, Tag, Settings } from 'lucide-react-native';
+import { Home, Wallet, CalendarClock, BarChart2, TrendingUp, PiggyBank, Tag, Settings } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useDrawer } from '@/context/DrawerContext';
@@ -13,6 +13,7 @@ const MENU_ITEMS = [
   { key: 'Scheduled',  labelKey: 'drawer.scheduled',  Icon: CalendarClock },
   { key: 'Analytics',    labelKey: 'drawer.analytics',    Icon: BarChart2 },
   { key: 'Investments',  labelKey: 'drawer.investments',  Icon: TrendingUp },
+  { key: 'Budgets',      labelKey: 'drawer.budgets',      Icon: PiggyBank },
   { key: 'Categories',   labelKey: 'drawer.categories',   Icon: Tag },
   { key: 'Settings',   labelKey: 'drawer.settings',   Icon: Settings },
 ];

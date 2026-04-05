@@ -95,6 +95,12 @@ service cloud.firestore {
       allow create: if request.auth.uid == request.resource.data.user_id;
     }
 
+    // ── Budgets ──────────────────────────────────────────────────────────────
+    match /budgets/{id} {
+      allow read, update, delete: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
+    }
+
     // ── Scheduled investment transactions ────────────────────────────────────
     match /scheduled_investment_transactions/{id} {
       allow read, update, delete: if request.auth.uid == resource.data.user_id;
