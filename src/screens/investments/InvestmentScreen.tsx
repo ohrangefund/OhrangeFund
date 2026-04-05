@@ -3,7 +3,7 @@ import {
   View, Text, FlatList, Pressable, StyleSheet,
   ActivityIndicator, useWindowDimensions, ScrollView,
 } from 'react-native';
-import { Plus, TrendingUp, TrendingDown, CalendarClock, RefreshCw } from 'lucide-react-native';
+import { Plus, TrendingUp, TrendingDown, CalendarClock, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useInvestmentAccount } from '@/hooks/useInvestmentAccount';
@@ -27,10 +27,13 @@ import { formatDate } from '@/utils/date';
 import type { InvestmentAsset, InvestmentTransaction, ScheduledInvestmentTransaction } from '@/types/models';
 
 type Tab = 'portfolio' | 'history' | 'scheduled';
+type ChartPeriod = '1w' | '1m' | '1y' | 'all';
+const CHART_PERIODS: ChartPeriod[] = ['1w', '1m', '1y', 'all'];
+const PERIOD_DAYS: Record<Exclude<ChartPeriod, 'all'>, number> = { '1w': 7, '1m': 30, '1y': 365 };
 
 export function InvestmentScreen() {
   const { colors } = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { width } = useWindowDimensions();
   const { account, loading: accLoading } = useInvestmentAccount();
   const { assets, loading: assetsLoading } = useInvestmentAssets(account?.id ?? null);
@@ -42,6 +45,9 @@ export function InvestmentScreen() {
   const [tab, setTab] = useState<Tab>('portfolio');
   const [prices, setPrices] = useState<Record<string, number>>({});
   const [pricesLoading, setPricesLoading] = useState(false);
+
+  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('1m');
+  const [chartOffset, setChartOffset] = useState(0);
 
   const [showAddAsset, setShowAddAsset] = useState(false);
   const [showBuy, setShowBuy] = useState(false);
@@ -95,14 +101,36 @@ export function InvestmentScreen() {
     [assets, prices],
   );
 
-  const chartPoints = useMemo((): SnapshotPoint[] =>
-    snapshots.map((s) => ({
+  const locale = i18n.language === 'pt' ? 'pt-PT' : 'en-GB';
+
+  const { windowStart, windowEnd, rangeLabel } = useMemo(() => {
+    if (chartPeriod === 'all') return { windowStart: null, windowEnd: null, rangeLabel: '' };
+    const days = PERIOD_DAYS[chartPeriod];
+    const now = new Date();
+    const end = new Date(now.getTime() + chartOffset * days * 86400000);
+    const start = new Date(end.getTime() - days * 86400000);
+    const fmtShort = (d: Date) => d.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+    const fmtFull = (d: Date) => d.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
+    const label = start.getFullYear() === end.getFullYear()
+      ? `${fmtShort(start)} – ${fmtShort(end)} ${start.getFullYear()}`
+      : `${fmtFull(start)} – ${fmtFull(end)}`;
+    return { windowStart: start, windowEnd: end, rangeLabel: label };
+  }, [chartPeriod, chartOffset, locale]);
+
+  const chartPoints = useMemo((): SnapshotPoint[] => {
+    const filtered = chartPeriod === 'all'
+      ? snapshots
+      : snapshots.filter((s) => {
+          const d = new Date(s.captured_at.seconds * 1000);
+          return d >= windowStart! && d <= windowEnd!;
+        });
+    return filtered.map((s) => ({
       value: s.total_value,
-      label: new Date(s.captured_at.seconds * 1000).toLocaleDateString('pt-PT', {
+      label: new Date(s.captured_at.seconds * 1000).toLocaleDateString(locale, {
         day: '2-digit', month: 'short',
       }),
-    })),
-  [snapshots]);
+    }));
+  }, [snapshots, chartPeriod, windowStart, windowEnd, locale]);
 
   const chartWidth = width - 32;
 
@@ -279,12 +307,59 @@ export function InvestmentScreen() {
         </View>
 
         {/* Chart */}
-        {chartPoints.length >= 2 && (
+        {snapshots.length >= 2 && (
           <View style={styles.chartWrap}>
             <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
               {t('investments.evolution')}
             </Text>
-            <InvestmentLineChart points={chartPoints} width={chartWidth} height={180} />
+
+            {/* Period selector */}
+            <View style={[styles.periodRow, { backgroundColor: colors.surface }]}>
+              {CHART_PERIODS.map((p) => (
+                <Pressable
+                  key={p}
+                  onPress={() => { setChartPeriod(p); setChartOffset(0); }}
+                  style={[styles.periodBtn, chartPeriod === p && { backgroundColor: colors.primary }]}
+                >
+                  <Text style={[styles.periodBtnText, {
+                    color: chartPeriod === p ? colors.primaryForeground : colors.textSecondary,
+                  }]}>
+                    {t(`investments.period${p === 'all' ? 'All' : p.toUpperCase()}` as any)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            {/* Date navigation */}
+            {chartPeriod !== 'all' && (
+              <View style={[styles.dateNavRow, { backgroundColor: colors.surface }]}>
+                <Pressable onPress={() => setChartOffset((o) => o - 1)} hitSlop={8} style={styles.navBtn}>
+                  <ChevronLeft size={18} color={colors.text} />
+                </Pressable>
+                <Text style={[styles.dateLabel, { color: colors.text }]} numberOfLines={1}>
+                  {rangeLabel}
+                </Text>
+                <Pressable
+                  onPress={() => setChartOffset((o) => o + 1)}
+                  hitSlop={8}
+                  style={styles.navBtn}
+                  disabled={chartOffset >= 0}
+                >
+                  <ChevronRight size={18} color={chartOffset >= 0 ? colors.textDisabled : colors.text} />
+                </Pressable>
+              </View>
+            )}
+
+            {chartPoints.length >= 2
+              ? <InvestmentLineChart points={chartPoints} width={chartWidth} height={180} />
+              : (
+                <View style={[styles.chartEmpty, { backgroundColor: colors.surface }]}>
+                  <Text style={[styles.chartEmptyText, { color: colors.textSecondary }]}>
+                    {t('analytics.noData')}
+                  </Text>
+                </View>
+              )
+            }
           </View>
         )}
 
@@ -412,6 +487,24 @@ const styles = StyleSheet.create({
   valueAssets: { fontSize: 13 },
   chartWrap: { marginBottom: 12 },
   sectionTitle: { fontSize: 12, fontWeight: '600', marginBottom: 8, textTransform: 'uppercase' },
+  periodRow: {
+    flexDirection: 'row', borderRadius: 14,
+    padding: 4, gap: 4, marginBottom: 8,
+  },
+  periodBtn: {
+    flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 10,
+  },
+  periodBtnText: { fontSize: 12, fontWeight: '600' },
+  dateNavRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    borderRadius: 14, paddingHorizontal: 8, paddingVertical: 10, marginBottom: 8,
+  },
+  navBtn: { padding: 4 },
+  dateLabel: { flex: 1, textAlign: 'center', fontSize: 13, fontWeight: '600' },
+  chartEmpty: {
+    height: 180, borderRadius: 14, alignItems: 'center', justifyContent: 'center',
+  },
+  chartEmptyText: { fontSize: 14 },
   tabs: {
     flexDirection: 'row', borderBottomWidth: 1, borderRadius: 0,
     marginHorizontal: -16, paddingHorizontal: 16, marginBottom: 12,

@@ -152,7 +152,9 @@ async function processScheduledTransfers(now: admin.firestore.Timestamp): Promis
   return processed;
 }
 
-// ─── Mock prices (mirrors src/api/investmentPrices.ts) ────────────────────────
+// ─── Price fetching (calls the deployed /api/prices Vercel Function) ──────────
+const API_BASE = process.env.EXPO_PUBLIC_API_URL ?? '';
+
 const MOCK_PRICES_CENTS: Record<string, number> = {
   VWCE: 11423, CSPX: 55120, IWDA: 9870, VUSA: 10245, EIMI: 3318,
   AAPL: 21890, TSLA: 18750, MSFT: 42300, NVDA: 87600, AMZN: 20100,
@@ -160,10 +162,15 @@ const MOCK_PRICES_CENTS: Record<string, number> = {
   BTC: 8_245_000, ETH: 313_500, SOL: 14_800,
 };
 
-async function getMockPrice(ticker: string): Promise<number> {
-  const price = MOCK_PRICES_CENTS[ticker];
-  if (!price) throw new Error(`Unknown ticker: ${ticker}`);
-  return price;
+async function fetchPrices(tickers: string[]): Promise<Record<string, number>> {
+  if (tickers.length === 0) return {};
+  if (!API_BASE) {
+    return Object.fromEntries(tickers.map((t) => [t, MOCK_PRICES_CENTS[t] ?? 0]));
+  }
+  const q = tickers.join(',');
+  const res = await fetch(`${API_BASE}/api/prices?tickers=${encodeURIComponent(q)}`);
+  if (!res.ok) throw new Error(`Prices API HTTP ${res.status}`);
+  return res.json() as Promise<Record<string, number>>;
 }
 
 async function processScheduledInvestmentTransactions(
@@ -182,7 +189,9 @@ async function processScheduledInvestmentTransactions(
       const assetDocPre = await db.collection('investment_assets').doc(sched.asset_id).get();
       if (!assetDocPre.exists) continue;
       const ticker = assetDocPre.data()!.ticker as string;
-      const pricePerUnit = await getMockPrice(ticker);
+      const prices = await fetchPrices([ticker]);
+      const pricePerUnit = prices[ticker] ?? 0;
+      if (pricePerUnit === 0) throw new Error(`No price for ticker ${ticker}`);
 
       await db.runTransaction(async (txn) => {
         const assetRef   = db.collection('investment_assets').doc(sched.asset_id);
@@ -193,8 +202,7 @@ async function processScheduledInvestmentTransactions(
 
         const currentQty     = assetSnap.data()!.quantity as number;
         const currentBalance = accountSnap.data()!.balance as number;
-        const price          = pricePerUnit; // already fetched above
-        const quantity       = sched.amount / price;
+        const quantity       = sched.amount / pricePerUnit;
 
         if (sched.type === 'sell' && quantity > currentQty + 1e-9) {
           console.warn(`Skipping sell — insufficient quantity for asset ${sched.asset_id}`);
@@ -219,7 +227,7 @@ async function processScheduledInvestmentTransactions(
           type: sched.type,
           amount: sched.amount,
           quantity,
-          price_per_unit: price,
+          price_per_unit: pricePerUnit,
           description: sched.description ?? null,
           date: sched.next_date,
           created_at: admin.firestore.FieldValue.serverTimestamp(),
@@ -230,7 +238,7 @@ async function processScheduledInvestmentTransactions(
         txn.set(snapRef, {
           user_id: sched.user_id,
           investment_account_id: sched.investment_account_id,
-          total_value: Math.round(newQty * price),
+          total_value: Math.round(newQty * pricePerUnit),
           trigger: 'cron',
           captured_at: admin.firestore.FieldValue.serverTimestamp(),
         });
@@ -265,6 +273,49 @@ async function processScheduledInvestmentTransactions(
   return processed;
 }
 
+// ─── Daily investment snapshots ───────────────────────────────────────────────
+async function processInvestmentSnapshots(): Promise<number> {
+  const assetsSnap = await db.collection('investment_assets').get();
+  if (assetsSnap.empty) return 0;
+
+  // Group assets by investment_account_id
+  type AssetRow = { user_id: string; investment_account_id: string; ticker: string; quantity: number };
+  const byAccount = new Map<string, AssetRow[]>();
+  for (const d of assetsSnap.docs) {
+    const data = d.data() as AssetRow;
+    const key = data.investment_account_id;
+    if (!byAccount.has(key)) byAccount.set(key, []);
+    byAccount.get(key)!.push(data);
+  }
+
+  // Batch-fetch prices for every unique ticker across all accounts
+  const allTickers = [...new Set(assetsSnap.docs.map((d) => d.data().ticker as string))];
+  const prices = await fetchPrices(allTickers);
+
+  // Write one snapshot per account with a non-zero portfolio value
+  const batch = db.batch();
+  let count = 0;
+  for (const [investmentAccountId, assets] of byAccount) {
+    const totalValue = Math.round(
+      assets.reduce((sum, a) => sum + a.quantity * (prices[a.ticker] ?? 0), 0),
+    );
+    if (totalValue === 0) continue;
+
+    const snapRef = db.collection('investment_snapshots').doc();
+    batch.set(snapRef, {
+      user_id: assets[0].user_id,
+      investment_account_id: investmentAccountId,
+      total_value: totalValue,
+      trigger: 'daily',
+      captured_at: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    count++;
+  }
+
+  if (count > 0) await batch.commit();
+  return count;
+}
+
 export default async function handler(req: any, res: any) {
   // Verify this is a legitimate cron invocation from Vercel
   const authHeader = req.headers['authorization'];
@@ -274,13 +325,14 @@ export default async function handler(req: any, res: any) {
 
   try {
     const now = admin.firestore.Timestamp.now();
-    const [transactions, transfers, investments] = await Promise.all([
+    const [transactions, transfers, investments, snapshots] = await Promise.all([
       processScheduledTransactions(now),
       processScheduledTransfers(now),
       processScheduledInvestmentTransactions(now),
+      processInvestmentSnapshots(),
     ]);
-    console.log(`Cron completed: ${transactions} transactions, ${transfers} transfers, ${investments} investments processed.`);
-    return res.status(200).json({ ok: true, transactions, transfers, investments });
+    console.log(`Cron completed: ${transactions} transactions, ${transfers} transfers, ${investments} investments, ${snapshots} portfolio snapshots.`);
+    return res.status(200).json({ ok: true, transactions, transfers, investments, snapshots });
   } catch (err) {
     console.error('Cron fatal error:', err);
     return res.status(500).json({ error: 'Internal error' });
