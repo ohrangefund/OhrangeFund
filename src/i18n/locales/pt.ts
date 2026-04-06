@@ -78,6 +78,8 @@ export default {
     account: 'CONTA',
     language: 'Idioma',
     signOut: 'Terminar sessão',
+    profile: 'PERFIL',
+    netWorth: 'Patrimônio',
     deleteAccount: 'Apagar conta',
     deleteAll: 'Apagar tudo',
     deleteAccountTitle: 'Apagar conta',

@@ -78,6 +78,8 @@ export default {
     account: 'ACCOUNT',
     language: 'Language',
     signOut: 'Sign out',
+    profile: 'PROFILE',
+    netWorth: 'Net worth',
     deleteAccount: 'Delete account',
     deleteAll: 'Delete everything',
     deleteAccountTitle: 'Delete account',

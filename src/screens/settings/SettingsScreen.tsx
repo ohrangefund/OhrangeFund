@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View, Text, Pressable, StyleSheet, ActivityIndicator,
   Modal, TextInput, KeyboardAvoidingView, Platform,
@@ -8,8 +8,13 @@ import { reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
+import { useAccounts } from '@/hooks/useAccounts';
+import { useInvestmentAccount } from '@/hooks/useInvestmentAccount';
+import { useInvestmentAssets } from '@/hooks/useInvestmentAssets';
+import { getAssetPrices } from '@/api/investmentPrices';
 import { auth } from '@/api/firebase';
 import { deleteUserAccount } from '@/api/user';
+import { formatCurrency } from '@/utils/currency';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { SettingsStackParamList } from '@/types/navigation';
 
@@ -19,6 +24,29 @@ export function SettingsScreen({ navigation }: Props) {
   const { colors } = useTheme();
   const { signOut, user } = useAuth();
   const { t } = useTranslation();
+
+  const { accounts } = useAccounts();
+  const { account: investAccount } = useInvestmentAccount();
+  const { assets } = useInvestmentAssets(investAccount?.id ?? null);
+  const [prices, setPrices] = useState<Record<string, number>>({});
+  const [pricesLoaded, setPricesLoaded] = useState(false);
+
+  useEffect(() => {
+    if (assets.length === 0) { setPricesLoaded(true); return; }
+    getAssetPrices(assets.map((a) => a.ticker))
+      .then((p) => setPrices(p))
+      .catch(() => {})
+      .finally(() => setPricesLoaded(true));
+  }, [assets]);
+
+  const netWorth = useMemo(() => {
+    const accountsTotal = accounts.reduce((sum, a) => sum + a.balance, 0);
+    const portfolioTotal = assets.reduce((sum, a) => sum + Math.round(a.quantity * (prices[a.ticker] ?? 0)), 0);
+    return accountsTotal + portfolioTotal;
+  }, [accounts, assets, prices]);
+
+  const displayName = user?.displayName ?? user?.email ?? '?';
+  const avatarLetter = displayName[0].toUpperCase();
 
   function getReauthError(code: string): string {
     switch (code) {
@@ -69,7 +97,31 @@ export function SettingsScreen({ navigation }: Props) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{t('settings.general')}</Text>
+      {/* Profile */}
+      <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{t('settings.profile')}</Text>
+      <View style={[styles.profileCard, { backgroundColor: colors.surface }]}>
+        <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+          <Text style={styles.avatarLetter}>{avatarLetter}</Text>
+        </View>
+        <View style={styles.profileInfo}>
+          <Text style={[styles.profileName, { color: colors.text }]} numberOfLines={1}>
+            {displayName}
+          </Text>
+          <View style={styles.netWorthRow}>
+            <Text style={[styles.netWorthLabel, { color: colors.textSecondary }]}>
+              {t('settings.netWorth')}
+            </Text>
+            {pricesLoaded
+              ? <Text style={[styles.netWorthValue, { color: colors.primary }]}>
+                  {formatCurrency(netWorth)}
+                </Text>
+              : <ActivityIndicator size="small" color={colors.primary} style={{ marginLeft: 6 }} />
+            }
+          </View>
+        </View>
+      </View>
+
+      <Text style={[styles.sectionLabel, { color: colors.textSecondary, marginTop: 24 }]}>{t('settings.general')}</Text>
       <View style={[styles.group, { backgroundColor: colors.surface }]}>
         <Pressable
           onPress={() => navigation.navigate('Visuals')}
@@ -95,6 +147,7 @@ export function SettingsScreen({ navigation }: Props) {
       </View>
 
       <Text style={[styles.sectionLabel, { color: colors.textSecondary, marginTop: 24 }]}>{t('settings.account')}</Text>
+
       <View style={[styles.group, { backgroundColor: colors.surface }]}>
         <Pressable
           onPress={signOut}
@@ -185,6 +238,21 @@ export function SettingsScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
+  profileCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    borderRadius: 16, padding: 16, marginBottom: 8,
+  },
+  avatar: {
+    width: 48, height: 48, borderRadius: 24,
+    alignItems: 'center', justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarLetter: { color: '#fff', fontSize: 20, fontWeight: '700' },
+  profileInfo: { flex: 1 },
+  profileName: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
+  netWorthRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  netWorthLabel: { fontSize: 13 },
+  netWorthValue: { fontSize: 15, fontWeight: '700' },
   sectionLabel: { fontSize: 12, fontWeight: '600', marginBottom: 8, marginLeft: 4, letterSpacing: 0.5 },
   group: { borderRadius: 16, overflow: 'hidden' },
   row: { flexDirection: 'row', alignItems: 'center', padding: 16 },
