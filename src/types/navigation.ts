@@ -10,6 +10,7 @@ export type AuthStackParamList = {
 export type MainTabsParamList = {
   Home: undefined;
   Accounts: undefined;
+  Shared: undefined;
   Scheduled: undefined;
   Analytics: undefined;
   Investments: undefined;
@@ -33,6 +34,10 @@ export type HomeStackParamList = {
 export type AccountsStackParamList = {
   AccountsMain: undefined;
   TransfersHistory: undefined;
+};
+
+export type SharedStackParamList = {
+  SharedMain: undefined;
 };
 
 export type ScheduledStackParamList = {

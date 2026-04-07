@@ -16,6 +16,7 @@ const ICONS: Record<string, React.FC<{ size: number; color: string }>> = {
 interface Props {
   visible: boolean;
   accounts: Account[];
+  sharedAccounts?: Account[];
   selectedId: string | null;
   onSelect: (account: Account) => void;
   onSelectTotal?: () => void;
@@ -23,7 +24,7 @@ interface Props {
   showTotal?: boolean;
 }
 
-export function SelectAccountModal({ visible, accounts, selectedId, onSelect, onSelectTotal, onClose, showTotal = true }: Props) {
+export function SelectAccountModal({ visible, accounts, sharedAccounts = [], selectedId, onSelect, onSelectTotal, onClose, showTotal = true }: Props) {
   const { colors } = useTheme();
   const totalSelected = selectedId === null;
 
@@ -85,6 +86,37 @@ export function SelectAccountModal({ visible, accounts, selectedId, onSelect, on
                 </Pressable>
               );
             }}
+            ListFooterComponent={sharedAccounts.length > 0 ? (
+              <>
+                <View style={[styles.sectionDivider, { borderTopColor: colors.border }]}>
+                  <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>SHARED</Text>
+                </View>
+                {sharedAccounts.map((item) => {
+                  const Icon = ICONS[item.icon] ?? Wallet;
+                  const selected = item.id === selectedId;
+                  return (
+                    <Pressable
+                      key={item.id}
+                      onPress={() => onSelect(item)}
+                      style={({ pressed }) => [
+                        styles.item,
+                        {
+                          backgroundColor: selected ? item.color + '22' : colors.surfaceAlt,
+                          borderColor: selected ? item.color : 'transparent',
+                          opacity: pressed ? 0.8 : 1,
+                        },
+                      ]}
+                    >
+                      <View style={[styles.iconWrap, { backgroundColor: item.color + '22' }]}>
+                        <Icon size={18} color={item.color} />
+                      </View>
+                      <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>{item.name}</Text>
+                      <Text style={[styles.balance, { color: colors.textSecondary }]}>{formatCurrency(item.balance)}</Text>
+                    </Pressable>
+                  );
+                })}
+              </>
+            ) : null}
           />
         </Pressable>
       </Pressable>
@@ -118,4 +150,6 @@ const styles = StyleSheet.create({
   },
   name: { flex: 1, fontSize: 15, fontWeight: '500' },
   balance: { fontSize: 14 },
+  sectionDivider: { borderTopWidth: 1, marginTop: 4, marginBottom: 12, paddingTop: 12 },
+  sectionLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
 });

@@ -35,10 +35,11 @@ interface Props {
   transaction: Transaction | null;
   account: Account;
   accounts: Account[];
+  sharedAccounts?: Account[];
   onClose: () => void;
 }
 
-export function EditTransactionModal({ transaction, account, accounts, onClose }: Props) {
+export function EditTransactionModal({ transaction, account, accounts, sharedAccounts = [], onClose }: Props) {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const { incomeCategories, expenseCategories } = useCategories();
@@ -66,16 +67,19 @@ export function EditTransactionModal({ transaction, account, accounts, onClose }
       setCategoryId(transaction.category_id);
       setSelectedDate(transaction.date instanceof Date ? transaction.date : transaction.date.toDate());
       setDescription(transaction.description);
-      setSelectedAccount(accounts.find((a) => a.id === transaction.account_id) ?? account);
+      setSelectedAccount([...accounts, ...sharedAccounts].find((a) => a.id === transaction.account_id) ?? account);
       setError('');
     }
   }, [transaction, accounts, account]);
+
+  const isShared = sharedAccounts.some((a) => a.id === selectedAccount.id);
 
   async function handleSave() {
     if (!transaction) return;
     const cents = amountToCents(parseFloat(amount.replace(',', '.')));
     if (isNaN(cents) || cents <= 0) { setError(t('common.invalidAmount')); return; }
     if (!categoryId) { setError(t('modalTransaction.selectCategory')); return; }
+    if (isShared && !description.trim()) { setError(t('modalTransaction.descRequired')); return; }
 
     setError('');
     setLoading(true);
@@ -242,6 +246,7 @@ export function EditTransactionModal({ transaction, account, accounts, onClose }
       <SelectAccountModal
         visible={showAccountPicker}
         accounts={accounts}
+        sharedAccounts={sharedAccounts}
         selectedId={selectedAccount.id}
         onSelect={(a) => { setSelectedAccount(a); setShowAccountPicker(false); }}
         onClose={() => setShowAccountPicker(false)}

@@ -9,6 +9,7 @@ export function useTransactions(
   accountId: string | null,
   startDate?: Date,
   endDate?: Date,
+  isSharedAccount?: boolean,
 ) {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -30,7 +31,7 @@ export function useTransactions(
     const unsub = subscribeToTransactions(
       user.uid, accountId, limitCount,
       (data, more) => { setTransactions(data); setHasMore(more); setLoading(false); },
-      startDate, endDate,
+      startDate, endDate, isSharedAccount,
     );
     return unsub;
   }, [user, accountId, limitCount, startTime, endTime]);

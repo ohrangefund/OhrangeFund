@@ -51,3 +51,23 @@ export async function archiveAccount(accountId: string, archived: boolean): Prom
   });
 }
 
+export async function createSharedAccount(
+  userId: string,
+  data: { name: string; balance: number; color: string; icon: string; show_in_general: boolean },
+): Promise<string> {
+  const ref = await addDoc(collection(db, 'accounts'), {
+    user_id: userId,
+    name: data.name,
+    balance: data.balance,
+    color: data.color,
+    icon: data.icon,
+    archived: false,
+    show_in_general: data.show_in_general,
+    is_shared: true,
+    bank_account_id: null,
+    created_at: serverTimestamp(),
+    updated_at: serverTimestamp(),
+  });
+  return ref.id;
+}
+

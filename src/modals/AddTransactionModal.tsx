@@ -34,10 +34,11 @@ interface Props {
   visible: boolean;
   account: Account | null;
   accounts: Account[];
+  sharedAccounts?: Account[];
   onClose: () => void;
 }
 
-export function AddTransactionModal({ visible, account, accounts, onClose }: Props) {
+export function AddTransactionModal({ visible, account, accounts, sharedAccounts = [], onClose }: Props) {
   const { colors } = useTheme();
   const { user } = useAuth();
   const { t } = useTranslation();
@@ -66,11 +67,14 @@ export function AddTransactionModal({ visible, account, accounts, onClose }: Pro
 
   function handleClose() { reset(); onClose(); }
 
+  const isShared = !!selectedAccount && sharedAccounts.some((a) => a.id === selectedAccount.id);
+
   async function handleSubmit() {
     const cents = amountToCents(parseFloat(amount.replace(',', '.')));
     if (isNaN(cents) || cents <= 0) { setError(t('common.invalidAmount')); return; }
     if (!selectedAccount) { setError(t('modalTransaction.selectAccount')); return; }
     if (!categoryId) { setError(t('modalTransaction.selectCategory')); return; }
+    if (isShared && !description.trim()) { setError(t('modalTransaction.descRequired')); return; }
 
     setError('');
     setLoading(true);
@@ -221,6 +225,7 @@ export function AddTransactionModal({ visible, account, accounts, onClose }: Pro
       <SelectAccountModal
         visible={showAccountPicker}
         accounts={accounts}
+        sharedAccounts={sharedAccounts}
         selectedId={selectedAccount?.id ?? null}
         onSelect={(a) => { setSelectedAccount(a); setShowAccountPicker(false); }}
         onClose={() => setShowAccountPicker(false)}

@@ -7,6 +7,7 @@ import { auth, db } from '@/api/firebase';
 import { createDefaultCategories } from '@/api/categories';
 import { createInvestmentAccount } from '@/api/investmentAccounts';
 import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { LanguagePicker } from '@/components/ui/LanguagePicker';
 import type { AuthScreenProps } from '@/types/navigation';
 

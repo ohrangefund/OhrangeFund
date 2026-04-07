@@ -9,6 +9,7 @@ import { ScheduledStack } from '@/navigation/stacks/ScheduledStack';
 import { AnalyticsStack } from '@/navigation/stacks/AnalyticsStack';
 import { InvestmentsStack } from '@/navigation/stacks/InvestmentsStack';
 import { BudgetsStack } from '@/navigation/stacks/BudgetsStack';
+import { SharedStack } from '@/navigation/stacks/SharedStack';
 import { SettingsStack } from '@/navigation/stacks/SettingsStack';
 import { AppHeader } from '@/components/ui/AppHeader';
 import { DrawerMenu } from '@/components/ui/DrawerMenu';
@@ -40,6 +41,7 @@ function TabsWithDrawer() {
       <Tab.Navigator screenOptions={screenOptions} tabBar={(props) => <NavBridge {...props} />}>
         <Tab.Screen name="Home" component={HomeStack} />
         <Tab.Screen name="Accounts" component={AccountsStack} />
+        <Tab.Screen name="Shared" component={SharedStack} />
         <Tab.Screen name="Scheduled" component={ScheduledStack} />
         <Tab.Screen name="Analytics" component={AnalyticsStack} />
         <Tab.Screen name="Investments" component={InvestmentsStack} />

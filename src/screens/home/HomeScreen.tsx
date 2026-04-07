@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useAccounts } from '@/hooks/useAccounts';
+import { useSharedAccounts } from '@/hooks/useSharedAccounts';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useCategories } from '@/hooks/useCategories';
 import { TransactionItem } from '@/components/shared/TransactionItem';
@@ -73,7 +74,18 @@ function getDateRange(period: Period, offset: number, locale: string): DateRange
 export function HomeScreen() {
   const { colors } = useTheme();
   const { t, i18n } = useTranslation();
-  const { accounts, totalBalance, loading: accountsLoading } = useAccounts();
+  const { accounts, loading: accountsLoading } = useAccounts();
+  const { ownedShared, memberAccounts } = useSharedAccounts();
+  const allWritableAccounts = useMemo(
+    () => [...accounts, ...ownedShared, ...memberAccounts],
+    [accounts, ownedShared, memberAccounts],
+  );
+  const totalBalance = useMemo(
+    () => allWritableAccounts
+      .filter((a) => a.show_in_general !== false)
+      .reduce((sum, a) => sum + a.balance, 0),
+    [allWritableAccounts],
+  );
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'expense' | 'income'>('expense');
   const [showAccountPicker, setShowAccountPicker] = useState(false);
@@ -102,7 +114,7 @@ export function HomeScreen() {
   const isTotal = selectedAccountId === null;
   const selectedAccount: Account | null = isTotal
     ? null
-    : accounts.find((a) => a.id === selectedAccountId) ?? null;
+    : allWritableAccounts.find((a) => a.id === selectedAccountId) ?? null;
   const displayBalance = isTotal ? totalBalance : (selectedAccount?.balance ?? 0);
 
   function handleSelectAccount(account: Account) {
@@ -116,14 +128,22 @@ export function HomeScreen() {
     AsyncStorage.setItem(SELECTED_ACCOUNT_KEY, TOTAL_KEY);
   }
 
+  const isSharedAccount = selectedAccountId !== null && (
+    ownedShared.some((a) => a.id === selectedAccountId) ||
+    memberAccounts.some((a) => a.id === selectedAccountId)
+  );
   const { transactions, loading: txLoading, hasMore, loadMore } = useTransactions(
-    selectedAccountId, dateRange.start, dateRange.end,
+    selectedAccountId, dateRange.start, dateRange.end, isSharedAccount,
   );
   const { categories } = useCategories();
 
   const generalAccountIds = useMemo(
-    () => new Set(accounts.filter((a) => a.show_in_general !== false).map((a) => a.id)),
-    [accounts],
+    () => new Set([
+      ...accounts.filter((a) => a.show_in_general !== false).map((a) => a.id),
+      ...ownedShared.filter((a) => a.show_in_general !== false).map((a) => a.id),
+      ...memberAccounts.filter((a) => a.show_in_general !== false).map((a) => a.id),
+    ]),
+    [accounts, ownedShared, memberAccounts],
   );
 
   const filteredTransactions = useMemo(
@@ -258,7 +278,7 @@ export function HomeScreen() {
             <TransactionItem
               transaction={item}
               category={categories.find((c) => c.id === item.category_id)}
-              accountName={isTotal ? (accounts.find((a) => a.id === item.account_id)?.name) : undefined}
+              accountName={isTotal ? (allWritableAccounts.find((a) => a.id === item.account_id)?.name) : undefined}
               onPress={() => setEditTransaction(item)}
             />
           )}
@@ -289,6 +309,7 @@ export function HomeScreen() {
       <SelectAccountModal
         visible={showAccountPicker}
         accounts={accounts}
+        sharedAccounts={[...ownedShared, ...memberAccounts]}
         selectedId={selectedAccountId}
         onSelect={handleSelectAccount}
         onSelectTotal={handleSelectTotal}
@@ -298,15 +319,17 @@ export function HomeScreen() {
         visible={showAdd}
         account={selectedAccount}
         accounts={accounts}
+        sharedAccounts={[...ownedShared, ...memberAccounts]}
         onClose={() => setShowAdd(false)}
       />
       {editTransaction && (() => {
-        const editAccount = accounts.find((a) => a.id === editTransaction.account_id) ?? null;
+        const editAccount = allWritableAccounts.find((a) => a.id === editTransaction.account_id) ?? null;
         return editAccount ? (
           <EditTransactionModal
             transaction={editTransaction}
             account={editAccount}
             accounts={accounts}
+            sharedAccounts={[...ownedShared, ...memberAccounts]}
             onClose={() => setEditTransaction(null)}
           />
         ) : null;

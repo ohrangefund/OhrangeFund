@@ -28,10 +28,20 @@ export function subscribeToTransactions(
   callback: (transactions: Transaction[], hasMore: boolean) => void,
   startDate?: Date,
   endDate?: Date,
+  isSharedAccount?: boolean,
 ): () => void {
+  // For shared accounts: query by account_id only — Firestore rule allows this via
+  // exists(account_members/accountId_uid), which is constant across all results.
+  // For personal accounts and general view: always include user_id (required for rule validation).
+  const primaryFilters = isSharedAccount && accountId !== null
+    ? [where('account_id', '==', accountId)]
+    : [
+        where('user_id', '==', userId),
+        ...(accountId !== null ? [where('account_id', '==', accountId)] : []),
+      ];
+
   const constraints = [
-    where('user_id', '==', userId),
-    ...(accountId !== null ? [where('account_id', '==', accountId)] : []),
+    ...primaryFilters,
     ...(startDate ? [where('date', '>=', Timestamp.fromDate(startDate))] : []),
     ...(endDate ? [where('date', '<=', Timestamp.fromDate(endDate))] : []),
     orderBy('date', 'desc'),

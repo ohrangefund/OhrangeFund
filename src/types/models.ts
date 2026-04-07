@@ -9,6 +9,7 @@ export interface Account {
   icon: string;    // nome do ícone Lucide
   archived: boolean;
   show_in_general: boolean;
+  is_shared?: boolean; // true = conta partilhada (aparece na screen Partilhadas)
   bank_account_id: string | null;
   created_at: Timestamp;
   updated_at: Timestamp;
@@ -198,6 +199,21 @@ export interface InvestmentSnapshot {
   total_value: number;      // valor total do portfolio em cêntimos
   trigger: 'buy' | 'sell' | 'cron';
   captured_at: Timestamp;
+}
+
+// ─── Account sharing ──────────────────────────────────────────────────────────
+
+export interface AccountMember {
+  id: string;           // compound: `{accountId}_{userId}`
+  account_id: string;
+  account_name?: string; // stored at invite time for display
+  user_id: string;      // invited member's UID
+  owner_id: string;     // account owner's UID
+  owner_email?: string; // stored at invite time for display
+  invitee_email: string; // stored for display
+  permission?: 'read' | 'write'; // deprecated — all members have full access
+  status: 'pending' | 'accepted';
+  created_at: Timestamp;
 }
 
 // ─── Budgets ──────────────────────────────────────────────────────────────────

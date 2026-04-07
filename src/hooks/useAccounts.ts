@@ -5,25 +5,27 @@ import type { Account } from '@/types/models';
 
 export function useAccounts() {
   const { user } = useAuth();
-  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [allOwned, setAllOwned] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
     setLoading(true);
     const unsubscribe = subscribeToAccounts(user.uid, (data) => {
-      setAccounts(data);
+      setAllOwned(data);
       setLoading(false);
     });
     return unsubscribe;
   }, [user]);
 
-  const active = useMemo(() => accounts.filter((a) => !a.archived), [accounts]);
-  const archived = useMemo(() => accounts.filter((a) => a.archived), [accounts]);
+  // Personal accounts (non-shared)
+  const personal = useMemo(() => allOwned.filter((a) => !a.is_shared), [allOwned]);
+  const accounts = useMemo(() => personal.filter((a) => !a.archived), [personal]);
+  const archived = useMemo(() => personal.filter((a) => a.archived), [personal]);
   const totalBalance = useMemo(
-    () => active.filter((a) => a.show_in_general !== false).reduce((sum, a) => sum + a.balance, 0),
-    [active],
+    () => accounts.filter((a) => a.show_in_general !== false).reduce((sum, a) => sum + a.balance, 0),
+    [accounts],
   );
 
-  return { accounts: active, archived, totalBalance, loading };
+  return { accounts, archived, totalBalance, loading };
 }
