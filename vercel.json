@@ -1,6 +1,6 @@
 {
-  "buildCommand": "",
-  "outputDirectory": ".",
+  "buildCommand": "npx expo export --platform web",
+  "outputDirectory": "dist",
   "crons": [
     {
       "path": "/api/cron/process-scheduled",

@@ -1,14 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Modal, View, Text, Pressable, StyleSheet } from 'react-native';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
-
-const MONTH_NAMES = [
-  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
-];
-
-const DAY_NAMES = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
 function isSameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear()
@@ -31,7 +25,17 @@ interface Props {
 
 export function DatePickerModal({ visible, selected, onSelect, onClose, allowFuture = false }: Props) {
   const { colors } = useTheme();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === 'pt' ? 'pt-PT' : 'en-GB';
   const today = new Date();
+
+  // Day abbreviations Mon–Sun derived from locale (Jan 6 2025 = Monday)
+  const dayNames = useMemo(
+    () => Array.from({ length: 7 }, (_, i) =>
+      new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(new Date(2025, 0, 6 + i)),
+    ),
+    [locale],
+  );
 
   const [cursor, setCursor] = useState<Date>(() => {
     const base = selected ?? today;
@@ -76,7 +80,7 @@ export function DatePickerModal({ visible, selected, onSelect, onClose, allowFut
         <Pressable style={[styles.sheet, { backgroundColor: colors.surface }]} onPress={() => {}}>
           {/* Header */}
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.title, { color: colors.text }]}>Selecionar data</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{t('common.selectDate')}</Text>
             <Pressable onPress={onClose} hitSlop={8}>
               <X size={20} color={colors.textSecondary} />
             </Pressable>
@@ -88,7 +92,10 @@ export function DatePickerModal({ visible, selected, onSelect, onClose, allowFut
               <ChevronLeft size={20} color={colors.text} />
             </Pressable>
             <Text style={[styles.monthLabel, { color: colors.text }]}>
-              {MONTH_NAMES[cursor.getMonth()]} {cursor.getFullYear()}
+              {(() => {
+                const name = new Intl.DateTimeFormat(locale, { month: 'long' }).format(cursor);
+                return name.charAt(0).toUpperCase() + name.slice(1) + ' ' + cursor.getFullYear();
+              })()}
             </Text>
             <Pressable onPress={nextMonth} hitSlop={12} style={[styles.navBtn, isCurrentMonth && styles.navBtnDisabled]}>
               <ChevronRight size={20} color={isCurrentMonth ? colors.textDisabled : colors.text} />
@@ -97,7 +104,7 @@ export function DatePickerModal({ visible, selected, onSelect, onClose, allowFut
 
           {/* Day names */}
           <View style={styles.dayNames}>
-            {DAY_NAMES.map((d) => (
+            {dayNames.map((d) => (
               <Text key={d} style={[styles.dayName, { color: colors.textSecondary }]}>{d}</Text>
             ))}
           </View>

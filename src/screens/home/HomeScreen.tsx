@@ -132,8 +132,24 @@ export function HomeScreen() {
     ownedShared.some((a) => a.id === selectedAccountId) ||
     memberAccounts.some((a) => a.id === selectedAccountId)
   );
+
+  // IDs of shared accounts visible in the general view — used to fetch other members' transactions
+  const generalSharedIds = useMemo(
+    () => isTotal
+      ? [
+          ...ownedShared.filter((a) => a.show_in_general !== false).map((a) => a.id),
+          ...memberAccounts.filter((a) => a.show_in_general !== false).map((a) => a.id),
+        ]
+      : [],
+    [isTotal, ownedShared, memberAccounts],
+  );
+
   const { transactions, loading: txLoading, hasMore, loadMore } = useTransactions(
-    selectedAccountId, dateRange.start, dateRange.end, isSharedAccount,
+    selectedAccountId,
+    dateRange.start,
+    dateRange.end,
+    isSharedAccount,
+    generalSharedIds.length > 0 ? generalSharedIds : undefined,
   );
   const { categories } = useCategories();
 

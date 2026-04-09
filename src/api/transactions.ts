@@ -21,6 +21,75 @@ export function subscribeToTransactionsForAnalytics(
   });
 }
 
+/**
+ * General-view subscription: merges the user's own transactions with transactions
+ * from shared accounts created by other members.
+ * Deduplication is handled by using the Firestore document ID as the map key.
+ */
+export function subscribeToGeneralTransactions(
+  userId: string,
+  sharedAccountIds: string[],
+  limitCount: number,
+  callback: (transactions: Transaction[], hasMore: boolean) => void,
+  startDate?: Date,
+  endDate?: Date,
+): () => void {
+  const dateFilters = [
+    ...(startDate ? [where('date', '>=', Timestamp.fromDate(startDate))] : []),
+    ...(endDate   ? [where('date', '<=', Timestamp.fromDate(endDate))]   : []),
+  ];
+
+  // One bucket per subscription; key = 'own' | accountId
+  const buckets = new Map<string, Map<string, Transaction>>([
+    ['own', new Map()],
+    ...sharedAccountIds.map((id): [string, Map<string, Transaction>] => [id, new Map()]),
+  ]);
+
+  function notifyMerged() {
+    const allMap = new Map<string, Transaction>();
+    for (const bucket of buckets.values()) {
+      for (const [id, tx] of bucket) allMap.set(id, tx);
+    }
+    const sorted = Array.from(allMap.values())
+      .sort((a, b) => b.date.seconds - a.date.seconds);
+    callback(sorted.slice(0, limitCount), sorted.length > limitCount);
+  }
+
+  const unsubs: Array<() => void> = [];
+
+  // 1. Transactions created by the current user (own accounts + shared where they are the author)
+  const ownQ = query(
+    collection(db, 'transactions'),
+    where('user_id', '==', userId),
+    ...dateFilters,
+    orderBy('date', 'desc'),
+  );
+  unsubs.push(onSnapshot(ownQ, (snap) => {
+    const bucket = buckets.get('own')!;
+    bucket.clear();
+    snap.docs.forEach((d) => bucket.set(d.id, { id: d.id, ...d.data() } as Transaction));
+    notifyMerged();
+  }));
+
+  // 2. One subscription per shared account to capture other members' transactions
+  for (const accountId of sharedAccountIds) {
+    const sharedQ = query(
+      collection(db, 'transactions'),
+      where('account_id', '==', accountId),
+      ...dateFilters,
+      orderBy('date', 'desc'),
+    );
+    unsubs.push(onSnapshot(sharedQ, (snap) => {
+      const bucket = buckets.get(accountId)!;
+      bucket.clear();
+      snap.docs.forEach((d) => bucket.set(d.id, { id: d.id, ...d.data() } as Transaction));
+      notifyMerged();
+    }));
+  }
+
+  return () => unsubs.forEach((f) => f());
+}
+
 export function subscribeToTransactions(
   userId: string,
   accountId: string | null,

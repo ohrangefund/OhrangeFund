@@ -133,6 +133,8 @@ export default {
     yesterday: 'Yesterday',
     daysAgo: '{{count}} days ago',
     search: 'Search...',
+    selectDate: 'Select date',
+    allAccounts: 'All accounts',
   },
   modalAccount: {
     addTitle: 'New account',

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { View, Text, Pressable, StyleSheet, Animated } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Animated, ScrollView } from 'react-native';
 import { Home, Wallet, CalendarClock, BarChart2, TrendingUp, PiggyBank, Tag, Settings, Users } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
@@ -59,6 +59,7 @@ export function DrawerMenu() {
 
         <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.menuList}>
         {MENU_ITEMS.map(({ key, labelKey, Icon }) => {
           const active = activeTab === key;
           return (
@@ -81,6 +82,7 @@ export function DrawerMenu() {
             </Pressable>
           );
         })}
+        </ScrollView>
       </Animated.View>
     </>
   );
@@ -132,5 +134,8 @@ const styles = StyleSheet.create({
   itemLabel: { flex: 1, fontSize: 15 },
   activeBar: {
     width: 4, height: 20, borderRadius: 2,
+  },
+  menuList: {
+    paddingBottom: 24,
   },
 });

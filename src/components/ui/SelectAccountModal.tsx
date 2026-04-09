@@ -3,6 +3,7 @@ import {
   Wallet, CreditCard, Landmark, Banknote, PiggyBank,
   Briefcase, Home, Car, ShoppingBag, Globe, X, Layers,
 } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { formatCurrency } from '@/utils/currency';
 import type { Account } from '@/types/models';
@@ -26,6 +27,7 @@ interface Props {
 
 export function SelectAccountModal({ visible, accounts, sharedAccounts = [], selectedId, onSelect, onSelectTotal, onClose, showTotal = true }: Props) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const totalSelected = selectedId === null;
 
   return (
@@ -33,7 +35,7 @@ export function SelectAccountModal({ visible, accounts, sharedAccounts = [], sel
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable style={[styles.sheet, { backgroundColor: colors.surface }]} onPress={() => {}}>
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.title, { color: colors.text }]}>Selecionar conta</Text>
+            <Text style={[styles.title, { color: colors.text }]}>{t('common.selectAccount')}</Text>
             <Pressable onPress={onClose} hitSlop={8}>
               <X size={20} color={colors.textSecondary} />
             </Pressable>
@@ -55,8 +57,8 @@ export function SelectAccountModal({ visible, accounts, sharedAccounts = [], sel
             <View style={[styles.iconWrap, { backgroundColor: colors.primary + '22' }]}>
               <Layers size={18} color={colors.primary} />
             </View>
-            <Text style={[styles.name, { color: colors.text, fontWeight: '600' }]}>Geral</Text>
-            <Text style={[styles.balance, { color: colors.textSecondary }]}>Todas as contas</Text>
+            <Text style={[styles.name, { color: colors.text, fontWeight: '600' }]}>{t('home.general')}</Text>
+            <Text style={[styles.balance, { color: colors.textSecondary }]}>{t('common.allAccounts')}</Text>
           </Pressable>}
 
           <FlatList
@@ -89,7 +91,7 @@ export function SelectAccountModal({ visible, accounts, sharedAccounts = [], sel
             ListFooterComponent={sharedAccounts.length > 0 ? (
               <>
                 <View style={[styles.sectionDivider, { borderTopColor: colors.border }]}>
-                  <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>SHARED</Text>
+                  <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>{t('drawer.shared').toUpperCase()}</Text>
                 </View>
                 {sharedAccounts.map((item) => {
                   const Icon = ICONS[item.icon] ?? Wallet;

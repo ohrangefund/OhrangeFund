@@ -133,6 +133,8 @@ export default {
     yesterday: 'Ontem',
     daysAgo: 'Há {{count}} dias',
     search: 'Pesquisar...',
+    selectDate: 'Selecionar data',
+    allAccounts: 'Todas as contas',
   },
   modalAccount: {
     addTitle: 'Nova conta',
