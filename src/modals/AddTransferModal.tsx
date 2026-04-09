@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Modal, View, Text, TextInput, ScrollView,
   Pressable, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform,
@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useAccounts } from '@/hooks/useAccounts';
+import { useSharedAccounts } from '@/hooks/useSharedAccounts';
 import { createTransfer } from '@/api/transfers';
 import { SelectAccountModal } from '@/components/ui/SelectAccountModal';
 import { DatePickerModal } from '@/components/ui/DatePickerModal';
@@ -26,6 +27,11 @@ export function AddTransferModal({ visible, fromAccount, onClose }: Props) {
   const { user } = useAuth();
   const { t } = useTranslation();
   const { accounts } = useAccounts();
+  const { ownedShared, memberAccounts } = useSharedAccounts();
+  const allShared = useMemo(
+    () => [...ownedShared, ...memberAccounts],
+    [ownedShared, memberAccounts],
+  );
 
   const [amount, setAmount] = useState('');
   const [fromAccountSelected, setFromAccountSelected] = useState<Account | null>(fromAccount ?? null);
@@ -40,7 +46,9 @@ export function AddTransferModal({ visible, fromAccount, onClose }: Props) {
 
   const effectiveFrom = fromAccount ?? fromAccountSelected;
   const destinationAccounts = accounts.filter((a) => a.id !== effectiveFrom?.id);
-  const sourceAccounts = accounts.filter((a) => a.id !== toAccount?.id);
+  const destinationShared  = allShared.filter((a) => a.id !== effectiveFrom?.id);
+  const sourceAccounts     = accounts.filter((a) => a.id !== toAccount?.id);
+  const sourceShared       = allShared.filter((a) => a.id !== toAccount?.id);
 
   function reset() {
     setAmount(''); setToAccount(null); setFromAccountSelected(fromAccount ?? null);
@@ -182,6 +190,7 @@ export function AddTransferModal({ visible, fromAccount, onClose }: Props) {
       <SelectAccountModal
         visible={showFromPicker}
         accounts={sourceAccounts}
+        sharedAccounts={sourceShared}
         selectedId={fromAccountSelected?.id ?? null}
         showTotal={false}
         onSelect={(acc) => { setFromAccountSelected(acc); setShowFromPicker(false); }}
@@ -190,6 +199,7 @@ export function AddTransferModal({ visible, fromAccount, onClose }: Props) {
       <SelectAccountModal
         visible={showToPicker}
         accounts={destinationAccounts}
+        sharedAccounts={destinationShared}
         selectedId={toAccount?.id ?? null}
         showTotal={false}
         onSelect={(acc) => { setToAccount(acc); setShowToPicker(false); }}

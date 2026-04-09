@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Modal, View, Text, TextInput, ScrollView,
   Pressable, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform,
@@ -7,6 +7,7 @@ import { X, CalendarDays, ChevronRight } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { useAccounts } from '@/hooks/useAccounts';
+import { useSharedAccounts } from '@/hooks/useSharedAccounts';
 import { updateTransfer, deleteTransfer } from '@/api/transfers';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { DatePickerModal } from '@/components/ui/DatePickerModal';
@@ -23,6 +24,11 @@ export function EditTransferModal({ transfer, onClose }: Props) {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const { accounts } = useAccounts();
+  const { ownedShared, memberAccounts } = useSharedAccounts();
+  const allAccounts = useMemo(
+    () => [...accounts, ...ownedShared, ...memberAccounts],
+    [accounts, ownedShared, memberAccounts],
+  );
 
   const [amount, setAmount] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
@@ -32,8 +38,8 @@ export function EditTransferModal({ transfer, onClose }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const fromAccount = accounts.find((a) => a.id === transfer?.from_account_id);
-  const toAccount = accounts.find((a) => a.id === transfer?.to_account_id);
+  const fromAccount = allAccounts.find((a) => a.id === transfer?.from_account_id);
+  const toAccount = allAccounts.find((a) => a.id === transfer?.to_account_id);
 
   useEffect(() => {
     if (transfer) {
